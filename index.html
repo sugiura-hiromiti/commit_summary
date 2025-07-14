@@ -1,0 +1,2605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commit Summary Dashboard - sugiura-hiromiti</title>
+    <meta name="description" content="Automated commit summary dashboard tracking changes across repositories">
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --border-color: #30363d;
+            --accent-color: #58a6ff;
+            --success-color: #3fb950;
+            --warning-color: #d29922;
+            --error-color: #f85149;
+            --hover-bg: #262c36;
+            --shadow: rgba(0,0,0,0.3);
+            --config-color: #7c3aed;
+            --rust-color: #ce422b;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f6f8fa;
+            --bg-tertiary: #f1f3f4;
+            --text-primary: #24292f;
+            --text-secondary: #656d76;
+            --border-color: #d0d7de;
+            --accent-color: #0969da;
+            --success-color: #1a7f37;
+            --warning-color: #bf8700;
+            --error-color: #d1242f;
+            --hover-bg: #f3f4f6;
+            --shadow: rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: all 0.3s ease;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 380px 1fr 340px;
+            grid-template-rows: 80px 1fr;
+            grid-template-areas: 
+                "header header header"
+                "sidebar main stats";
+            height: 100vh;
+            gap: 1px;
+            background-color: var(--border-color);
+        }
+
+        /* Header */
+        .header {
+            grid-area: header;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            box-shadow: 0 1px 3px var(--shadow);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .repo-info {
+            display: flex;
+            flex-direction: column;
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .search-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-input {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 6px;
+            padding: 8px 36px 8px 12px;
+            color: white;
+            font-size: 0.875rem;
+            width: 300px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .search-input:focus {
+            outline: none;
+            background: rgba(255,255,255,0.25);
+            border-color: rgba(255,255,255,0.5);
+            width: 380px;
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 12px;
+            color: rgba(255,255,255,0.7);
+            pointer-events: none;
+        }
+
+        .header-btn {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .header-btn:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            grid-area: sidebar;
+            background: var(--bg-secondary);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+        }
+
+        .sidebar-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-subtitle {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+        }
+
+        .filter-section {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .filter-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-secondary);
+        }
+
+        .filter-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .filter-chip {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 4px 12px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .filter-chip:hover {
+            background: var(--hover-bg);
+        }
+
+        .filter-chip.active {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .repository-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 0;
+        }
+
+        .repo-group {
+            margin-bottom: 8px;
+        }
+
+        .repo-header {
+            padding: 12px 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            background: var(--bg-tertiary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .repo-header:hover {
+            background: var(--hover-bg);
+        }
+
+        .repo-header.config {
+            border-left-color: var(--config-color);
+        }
+
+        .repo-header.rust {
+            border-left-color: var(--rust-color);
+        }
+
+        .repo-info-inline {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .repo-icon {
+            font-size: 1.1rem;
+        }
+
+        .repo-meta {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: normal;
+        }
+
+        .repo-toggle {
+            transition: transform 0.2s ease;
+            color: var(--text-secondary);
+        }
+
+        .repo-group.collapsed .repo-toggle {
+            transform: rotate(-90deg);
+        }
+
+        .commit-files {
+            display: block;
+        }
+
+        .repo-group.collapsed .commit-files {
+            display: none;
+        }
+
+        .commit-item {
+            padding: 12px 20px 12px 40px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .commit-item:hover {
+            background: var(--hover-bg);
+        }
+
+        .commit-item.active {
+            background: rgba(88, 166, 255, 0.1);
+            border-left-color: var(--accent-color);
+        }
+
+        .commit-icon {
+            font-size: 1rem;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .commit-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .commit-title {
+            font-size: 0.8125rem;
+            font-weight: 500;
+            margin-bottom: 4px;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .commit-meta {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .commit-badges {
+            display: flex;
+            gap: 4px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+
+        .commit-badge {
+            background: var(--success-color);
+            color: white;
+            border-radius: 8px;
+            padding: 2px 6px;
+            font-size: 0.6875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            position: relative;
+            border: 1px solid transparent;
+        }
+
+        .commit-badge:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            opacity: 0.9;
+        }
+
+        .commit-badge:active {
+            transform: translateY(0);
+        }
+
+        .commit-badge.active-in-search {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 4px rgba(88, 166, 255, 0.4);
+            background: var(--accent-color);
+        }
+
+        .commit-badge.active-in-search::after {
+            content: '✓';
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: var(--success-color);
+            color: white;
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+            font-size: 0.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .commit-badge.rust {
+            background: var(--rust-color);
+        }
+
+        .commit-badge.config {
+            background: var(--config-color);
+        }
+
+        .commit-badge.refactor {
+            background: #f59e0b;
+        }
+
+        .commit-badge.feat {
+            background: var(--success-color);
+        }
+
+        .commit-badge.fix {
+            background: var(--warning-color);
+        }
+
+        .commit-badge.nix {
+            background: #5277c3;
+        }
+
+        .commit-badge.script {
+            background: #f59e0b;
+        }
+
+        .commit-badge.automation {
+            background: #8b5cf6;
+        }
+
+        .commit-badge.git {
+            background: #f14e32;
+        }
+
+        .commit-badge.tree {
+            background: #059669;
+        }
+
+        .commit-badge.trait {
+            background: #dc2626;
+        }
+
+        .commit-badge.cleanup {
+            background: #6b7280;
+        }
+
+        .commit-badge.terminal {
+            background: #1f2937;
+        }
+
+        .commit-badge.flake {
+            background: #3b82f6;
+        }
+
+        /* Tag filter section */
+        .tag-filter-section {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .active-tag-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .active-tag-filter {
+            background: var(--accent-color);
+            color: white;
+            border-radius: 12px;
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .active-tag-filter:hover {
+            background: var(--error-color);
+        }
+
+        .active-tag-filter .remove-tag {
+            font-size: 0.875rem;
+            font-weight: bold;
+            opacity: 0.8;
+        }
+
+        .active-tag-filter .remove-tag:hover {
+            opacity: 1;
+        }
+
+        .clear-tags-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-secondary);
+        }
+
+        .clear-tags-btn:hover {
+            background: var(--error-color);
+            color: white;
+            border-color: var(--error-color);
+        }
+
+        /* Main Content */
+        .main-content {
+            grid-area: main;
+            background: var(--bg-secondary);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .content-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            flex-shrink: 0;
+        }
+
+        .content-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .content-meta {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .content-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.8125rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .action-btn:hover {
+            background: var(--hover-bg);
+        }
+
+        .action-btn.active {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .content-body {
+            flex: 1;
+            overflow: auto;
+            padding: 0;
+        }
+
+        .commit-summary-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: var(--bg-primary);
+        }
+
+        .welcome-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            flex-direction: column;
+            color: var(--text-secondary);
+            text-align: center;
+            padding: 40px;
+        }
+
+        .welcome-icon {
+            font-size: 4rem;
+            margin-bottom: 24px;
+            opacity: 0.6;
+        }
+
+        .welcome-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .welcome-description {
+            max-width: 500px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .welcome-stats {
+            display: flex;
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .welcome-stat {
+            text-align: center;
+        }
+
+        .welcome-stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
+        .welcome-stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Statistics Panel */
+        .stats-panel {
+            grid-area: stats;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .stats-section {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .stats-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-primary);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 12px 8px;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-number {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .repo-breakdown {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .repo-stat {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .repo-stat-name {
+            font-size: 0.8125rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .repo-stat-count {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        .recent-activity {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .activity-item:hover {
+            background: var(--hover-bg);
+            margin: 0 -16px;
+            padding: 8px 16px;
+            border-radius: 6px;
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-color);
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .activity-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .activity-title {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .activity-time {
+            font-size: 0.6875rem;
+            color: var(--text-secondary);
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-top: 2px solid var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 12px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1400px) {
+            .container {
+                grid-template-columns: 340px 1fr 300px;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 300px 1fr;
+                grid-template-areas: 
+                    "header header"
+                    "sidebar main";
+            }
+            
+            .stats-panel {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-areas: 
+                    "header"
+                    "main";
+            }
+            
+            .sidebar {
+                display: none;
+            }
+            
+            .search-input {
+                width: 200px;
+            }
+            
+            .search-input:focus {
+                width: 250px;
+            }
+        }
+
+        /* Calendar Styles */
+        .calendar-section {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .calendar-nav-btn {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 6px 10px;
+            cursor: pointer;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-nav-btn:hover {
+            background: var(--hover-bg);
+        }
+
+        .calendar-month-year {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .calendar-quick-nav {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+
+        .quick-nav-btn {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 3px 6px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+
+        .quick-nav-btn:hover {
+            background: var(--hover-bg);
+            color: var(--text-primary);
+        }
+
+        .quick-nav-btn.active {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            margin-bottom: 12px;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            padding: 4px 2px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            position: relative;
+            background: var(--bg-secondary);
+            border: 1px solid transparent;
+        }
+
+        .calendar-day:hover {
+            background: var(--hover-bg);
+            border-color: var(--border-color);
+        }
+
+        .calendar-day.today {
+            background: var(--accent-color);
+            color: white;
+            font-weight: 600;
+        }
+
+        .calendar-day.selected {
+            background: var(--success-color);
+            color: white;
+            font-weight: 600;
+        }
+
+        .calendar-day.other-month {
+            color: var(--text-secondary);
+            opacity: 0.5;
+        }
+
+        /* Activity Heatmap Styles */
+        .calendar-day.activity-1 {
+            background: rgba(88, 166, 255, 0.2);
+            border-color: rgba(88, 166, 255, 0.3);
+        }
+
+        .calendar-day.activity-2 {
+            background: rgba(88, 166, 255, 0.4);
+            border-color: rgba(88, 166, 255, 0.5);
+        }
+
+        .calendar-day.activity-3 {
+            background: rgba(88, 166, 255, 0.6);
+            border-color: rgba(88, 166, 255, 0.7);
+            color: white;
+        }
+
+        .calendar-day.activity-4 {
+            background: rgba(88, 166, 255, 0.8);
+            border-color: rgba(88, 166, 255, 0.9);
+            color: white;
+        }
+
+        .calendar-day.activity-5 {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Repository indicators */
+        .calendar-day .repo-indicators {
+            position: absolute;
+            bottom: 1px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1px;
+        }
+
+        .repo-dot {
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: var(--success-color);
+        }
+
+        .repo-dot.config {
+            background: var(--config-color);
+        }
+
+        .repo-dot.rust {
+            background: var(--rust-color);
+        }
+
+        /* Streak indicators */
+        .calendar-day.streak {
+            box-shadow: inset 0 0 0 2px var(--success-color);
+        }
+
+        .calendar-day.streak-start::before {
+            content: '🔥';
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            font-size: 0.6rem;
+        }
+
+        /* Timeline Calendar */
+        .timeline-calendar {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 16px;
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .timeline-range {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .timeline-scroll {
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .timeline-track {
+            display: flex;
+            gap: 2px;
+            min-width: 280px;
+            padding: 8px 0;
+        }
+
+        .timeline-day {
+            flex: 0 0 20px;
+            height: 20px;
+            border-radius: 2px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .timeline-day:hover {
+            transform: scaleY(1.2);
+            background: var(--hover-bg);
+        }
+
+        .timeline-day.has-commits {
+            background: var(--accent-color);
+        }
+
+        .timeline-day.selected {
+            background: var(--success-color);
+            transform: scaleY(1.3);
+        }
+
+        .timeline-day.today {
+            border-color: var(--warning-color);
+            border-width: 2px;
+        }
+
+        /* Calendar Legend */
+        .calendar-legend {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .legend-color {
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+        }
+
+        /* Calendar Tooltip */
+        .calendar-tooltip {
+            position: absolute;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 0.75rem;
+            box-shadow: 0 4px 12px var(--shadow);
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .calendar-tooltip.visible {
+            opacity: 1;
+        }
+
+        .tooltip-date {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+
+        .tooltip-activity {
+            color: var(--text-secondary);
+            margin-bottom: 2px;
+        }
+
+        .tooltip-repos {
+            display: flex;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .tooltip-repo {
+            background: var(--bg-tertiary);
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.65rem;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <span>📊</span>
+                    <span>Commit Summary Dashboard</span>
+                </div>
+                <div class="repo-info">
+                    <div>sugiura-hiromiti/commit_summery</div>
+                    <div>Multi-repository commit tracking</div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="search-container">
+                    <input type="text" class="search-input" placeholder="Search commits... (click tags to toggle filters)" id="searchInput">
+                    <span class="search-icon">🔍</span>
+                </div>
+                <button class="header-btn" id="themeToggle" title="Toggle theme">
+                    <span>🌙</span>
+                </button>
+                <a href="https://github.com/sugiura-hiromiti/commit_summery" class="header-btn" target="_blank">
+                    <span>📱</span>
+                    <span>GitHub</span>
+                </a>
+            </div>
+        </header>
+
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">
+                    <span>📁</span>
+                    <span>Repository Summaries</span>
+                </div>
+                <div class="sidebar-subtitle">Tracked repositories and their commit summaries</div>
+            </div>
+            
+            <div class="filter-section">
+                <div class="filter-title">Time Filters</div>
+                <div class="filter-chips" id="timeFilters">
+                    <span class="filter-chip active" data-filter="all">All Time</span>
+                    <span class="filter-chip" data-filter="today">📅 Today</span>
+                    <span class="filter-chip" data-filter="week">📆 This Week</span>
+                    <span class="filter-chip" data-filter="month">🗓️ This Month</span>
+                </div>
+            </div>
+
+            <div class="tag-filter-section" id="tagFilterSection" style="display: none;">
+                <div class="filter-title">Active Tag Filters</div>
+                <div class="active-tag-filters" id="activeTagFilters">
+                    <!-- Active tag filters will be populated here -->
+                </div>
+            </div>
+            
+            <div class="repository-list" id="repositoryList">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <span>Discovering repositories...</span>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-header">
+                <div class="content-title" id="contentTitle">
+                    <span>📄</span>
+                    <span>Welcome to Commit Summary Dashboard</span>
+                </div>
+                <div class="content-meta">
+                    <span id="contentMeta">Select a commit summary to view detailed information</span>
+                    <div class="content-actions">
+                        <button class="action-btn active" id="previewBtn" data-mode="preview">
+                            <span>👁️</span>
+                            <span>Preview</span>
+                        </button>
+                        <button class="action-btn" id="sourceBtn" data-mode="source">
+                            <span>📝</span>
+                            <span>Source</span>
+                        </button>
+                        <button class="action-btn" id="shareBtn">
+                            <span>🔗</span>
+                            <span>Share</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="content-body" id="contentBody">
+                <div class="welcome-screen">
+                    <div class="welcome-icon">📊</div>
+                    <h2 class="welcome-title">Multi-Repository Commit Dashboard</h2>
+                    <p class="welcome-description">
+                        This dashboard automatically tracks and displays commit summaries from multiple repositories. 
+                        Each summary provides detailed information about changes, diffs, and repository status.
+                        Select a commit summary from the sidebar to view its detailed analysis.
+                    </p>
+                    <div class="welcome-stats" id="welcomeStats">
+                        <div class="welcome-stat">
+                            <div class="welcome-stat-number" id="totalSummaries">0</div>
+                            <div class="welcome-stat-label">Total Summaries</div>
+                        </div>
+                        <div class="welcome-stat">
+                            <div class="welcome-stat-number" id="totalRepos">0</div>
+                            <div class="welcome-stat-label">Repositories</div>
+                        </div>
+                        <div class="welcome-stat">
+                            <div class="welcome-stat-number" id="recentActivity">0</div>
+                            <div class="welcome-stat-label">Recent Activity</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <aside class="stats-panel">
+            <div class="timeline-calendar">
+                <div class="timeline-header">
+                    <div class="stats-title">
+                        <span>📅</span>
+                        <span>Recent Activity</span>
+                    </div>
+                    <div class="timeline-range" id="timelineRange">Last 14 days</div>
+                </div>
+                <div class="timeline-scroll">
+                    <div class="timeline-track" id="timelineTrack">
+                        <!-- Timeline days will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-section">
+                <div class="stats-title">
+                    <span>🗓️</span>
+                    <span>Calendar Navigator</span>
+                </div>
+                <div class="calendar-quick-nav">
+                    <button class="quick-nav-btn" id="todayBtn">Today</button>
+                    <button class="quick-nav-btn" id="firstCommitBtn">First</button>
+                    <button class="quick-nav-btn" id="lastCommitBtn">Latest</button>
+                    <button class="quick-nav-btn" id="streakBtn">Streak</button>
+                </div>
+                <div class="calendar-header">
+                    <button class="calendar-nav-btn" id="prevMonth">‹</button>
+                    <div class="calendar-month-year" id="calendarMonthYear"></div>
+                    <button class="calendar-nav-btn" id="nextMonth">›</button>
+                </div>
+                <div class="calendar-grid" id="calendarGrid">
+                    <!-- Calendar will be populated here -->
+                </div>
+                <div class="calendar-legend">
+                    <div class="legend-item">
+                        <span>Less</span>
+                        <div class="legend-color" style="background: var(--bg-secondary);"></div>
+                        <div class="legend-color activity-1"></div>
+                        <div class="legend-color activity-3"></div>
+                        <div class="legend-color activity-5"></div>
+                        <span>More</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-section">
+                <div class="stats-title">
+                    <span>📈</span>
+                    <span>Overview</span>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-number" id="totalCommits">0</span>
+                        <span class="stat-label">Total Summaries</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="totalRepositories">0</span>
+                        <span class="stat-label">Repositories</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="todayCommits">0</span>
+                        <span class="stat-label">Today</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="weekCommits">0</span>
+                        <span class="stat-label">This Week</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-section">
+                <div class="stats-title">
+                    <span>📊</span>
+                    <span>Repository Breakdown</span>
+                </div>
+                <div class="repo-breakdown" id="repoBreakdown">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <span>Loading...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-section">
+                <div class="stats-title">
+                    <span>⏰</span>
+                    <span>Recent Activity</span>
+                </div>
+                <div class="recent-activity" id="recentActivity">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <span>Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Calendar Tooltip -->
+        <div class="calendar-tooltip" id="calendarTooltip">
+            <div class="tooltip-date"></div>
+            <div class="tooltip-activity"></div>
+            <div class="tooltip-repos"></div>
+        </div>
+    </div>
+    <script>
+        class MultiRepoCommitDashboard {
+            constructor() {
+                this.repositories = new Map();
+                this.allSummaries = [];
+                this.filteredSummaries = [];
+                this.currentSummary = null;
+                this.searchTerm = '';
+                this.activeFilters = new Set(['all']);
+                this.isDarkMode = localStorage.getItem('darkMode') === 'true';
+                this.viewMode = 'preview';
+                
+                // Calendar properties
+                this.currentCalendarDate = new Date();
+                this.selectedCalendarDate = null;
+                this.activityData = new Map();
+                this.streakData = [];
+                
+                this.init();
+            }
+
+            async init() {
+                this.setupTheme();
+                await this.discoverAllRepositories();
+                this.organizeByRepository();
+                this.renderRepositoryList();
+                this.renderStatistics();
+                this.renderRepoBreakdown();
+                this.renderRecentActivity();
+                this.initializeCalendar();
+                this.renderTimeline();
+                this.renderCalendar();
+                this.setupEventListeners();
+                
+                if (this.allSummaries.length > 0) {
+                    this.selectSummary(this.allSummaries[0]);
+                }
+            }
+
+            setupTheme() {
+                if (this.isDarkMode) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    document.getElementById('themeToggle').innerHTML = '<span>☀️</span>';
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                    document.getElementById('themeToggle').innerHTML = '<span>🌙</span>';
+                }
+            }
+
+            toggleTheme() {
+                this.isDarkMode = !this.isDarkMode;
+                localStorage.setItem('darkMode', this.isDarkMode);
+                this.setupTheme();
+            }
+
+            async discoverAllRepositories() {
+                try {
+                    // Auto-discover repositories and their summaries
+                    const summaries = [
+                        // .config repository summaries
+                        {
+                            id: '1',
+                            filename: '2025-07-14_21-28-43.html',
+                            path: '.config/2025/07/14/2025-07-14_21-28-43.html',
+                            repository: '.config',
+                            repositoryUrl: 'https://github.com/sugiura-hiromiti/.config',
+                            date: new Date('2025-07-14T21:28:43'),
+                            size: '10.3 KB',
+                            title: 'fix: update auto_commit script instruction',
+                            author: 'sugiura-hiromiti',
+                            commitHash: 'cea8f67',
+                            branch: 'main',
+                            filesChanged: 1,
+                            insertions: 1,
+                            deletions: 1,
+                            type: 'fix',
+                            tags: ['script', 'automation', 'git', 'config'],
+                            status: 'success',
+                            repoType: 'config'
+                        },
+                        {
+                            id: '2',
+                            filename: '2025-07-14_21-17-05.html',
+                            path: '.config/2025/07/14/2025-07-14_21-17-05.html',
+                            repository: '.config',
+                            repositoryUrl: 'https://github.com/sugiura-hiromiti/.config',
+                            date: new Date('2025-07-14T21:17:05'),
+                            size: '15.8 KB',
+                            title: 'feat(nix): improve flake formatting and add terminal title updates',
+                            author: 'sugiura-hiromiti',
+                            commitHash: '9ba6e3f',
+                            branch: 'main',
+                            filesChanged: 2,
+                            insertions: 88,
+                            deletions: 82,
+                            type: 'feat',
+                            tags: ['nix', 'flake', 'terminal', 'config'],
+                            status: 'success',
+                            repoType: 'config'
+                        },
+                        // oso repository summaries
+                        {
+                            id: '3',
+                            filename: '2025-07-14_23-22-35.html',
+                            path: 'oso/2025/07/14/2025-07-14_23-22-35.html',
+                            repository: 'oso',
+                            repositoryUrl: 'https://github.com/sugiura-hiromiti/oso',
+                            date: new Date('2025-07-14T23:22:35'),
+                            size: '11.4 KB',
+                            title: 'refactor(tree): clean up unused import and simplify trait method signature',
+                            author: 'sugiura-hiromiti',
+                            commitHash: '28ada39',
+                            branch: 'main',
+                            filesChanged: 1,
+                            insertions: 2,
+                            deletions: 2,
+                            type: 'refactor',
+                            tags: ['rust', 'tree', 'trait', 'cleanup'],
+                            status: 'success',
+                            repoType: 'rust'
+                        }
+                    ];
+                    
+                    this.allSummaries = summaries.sort((a, b) => b.date - a.date);
+                    this.filteredSummaries = [...this.allSummaries];
+                    
+                } catch (error) {
+                    console.error('Error discovering repositories:', error);
+                    this.allSummaries = [];
+                    this.filteredSummaries = [];
+                }
+            }
+
+            organizeByRepository() {
+                this.repositories.clear();
+                
+                this.filteredSummaries.forEach(summary => {
+                    if (!this.repositories.has(summary.repository)) {
+                        this.repositories.set(summary.repository, {
+                            name: summary.repository,
+                            url: summary.repositoryUrl,
+                            summaries: [],
+                            totalCommits: 0,
+                            lastUpdate: null,
+                            collapsed: false,
+                            icon: this.getRepositoryIcon(summary.repository),
+                            type: summary.repoType
+                        });
+                    }
+                    
+                    const repo = this.repositories.get(summary.repository);
+                    repo.summaries.push(summary);
+                    repo.totalCommits += 1;
+                    
+                    if (!repo.lastUpdate || summary.date > repo.lastUpdate) {
+                        repo.lastUpdate = summary.date;
+                    }
+                });
+
+                this.repositories.forEach(repo => {
+                    repo.summaries.sort((a, b) => b.date - a.date);
+                });
+            }
+
+            getRepositoryIcon(repoName) {
+                const icons = {
+                    '.config': '⚙️',
+                    'oso': '🦀',
+                    'dotfiles': '📝',
+                    'nixos': '❄️',
+                    'scripts': '📜'
+                };
+                return icons[repoName] || '📁';
+            }
+
+            getCommitTypeIcon(type) {
+                const icons = {
+                    'feat': '✨',
+                    'fix': '🐛',
+                    'docs': '📚',
+                    'style': '💄',
+                    'refactor': '♻️',
+                    'test': '🧪',
+                    'chore': '🔧'
+                };
+                return icons[type] || '📝';
+            }
+
+            renderRepositoryList() {
+                const list = document.getElementById('repositoryList');
+                
+                if (this.repositories.size === 0) {
+                    list.innerHTML = '<div class="loading"><span>No commit summaries found</span></div>';
+                    return;
+                }
+
+                let html = '';
+                for (const [repoName, repo] of this.repositories.entries()) {
+                    const isCollapsed = repo.collapsed ? 'collapsed' : '';
+                    const repoClass = repo.type || 'default';
+                    
+                    html += `
+                        <div class="repo-group ${isCollapsed}" data-repo="${repoName}">
+                            <div class="repo-header ${repoClass}" data-repo="${repoName}">
+                                <div class="repo-info-inline">
+                                    <span class="repo-icon">${repo.icon}</span>
+                                    <div>
+                                        <div><strong>${repoName}</strong></div>
+                                        <div class="repo-meta">
+                                            ${repo.summaries.length} summaries • Last: ${this.formatRelativeTime(repo.lastUpdate)}
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="repo-toggle">▼</span>
+                            </div>
+                            <div class="commit-files">
+                                ${repo.summaries.map(summary => this.renderCommitItem(summary)).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                list.innerHTML = html;
+            }
+
+            renderCommitItem(summary) {
+                const typeIcon = this.getCommitTypeIcon(summary.type);
+                const isRecent = this.isRecent(summary.date);
+                const activeSearchTags = this.getActiveSearchTags();
+                
+                let badges = '';
+                if (isRecent) badges += '<div class="commit-badge" data-tag="new">New</div>';
+                
+                // Add all tags as clickable badges
+                summary.tags.forEach(tag => {
+                    const badgeClass = this.getTagBadgeClass(tag);
+                    const isActive = activeSearchTags.includes(tag.toLowerCase());
+                    const activeClass = isActive ? 'active-in-search' : '';
+                    const tooltipText = isActive ? `Click to remove ${tag} filter` : `Click to filter by ${tag}`;
+                    
+                    badges += `<div class="commit-badge ${badgeClass} ${activeClass}" data-tag="${tag}" title="${tooltipText}">${tag}</div>`;
+                });
+                
+                // Add commit type badge
+                const isTypeActive = activeSearchTags.includes(summary.type.toLowerCase());
+                const typeActiveClass = isTypeActive ? 'active-in-search' : '';
+                const typeTooltipText = isTypeActive ? `Click to remove ${summary.type} filter` : `Click to filter by ${summary.type}`;
+                
+                badges += `<div class="commit-badge ${summary.type} ${typeActiveClass}" data-tag="${summary.type}" title="${typeTooltipText}">${summary.type}</div>`;
+                
+                return `
+                    <div class="commit-item" data-summary-id="${summary.id}">
+                        <div class="commit-icon">${typeIcon}</div>
+                        <div class="commit-info">
+                            <div class="commit-title">${summary.title}</div>
+                            <div class="commit-meta">
+                                <div>${this.formatDate(summary.date)} • ${summary.commitHash}</div>
+                                <div>${summary.filesChanged} files • +${summary.insertions} -${summary.deletions}</div>
+                            </div>
+                            <div class="commit-badges">
+                                ${badges}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            getTagBadgeClass(tag) {
+                const tagClasses = {
+                    'rust': 'rust',
+                    'nix': 'nix',
+                    'config': 'config',
+                    'script': 'script',
+                    'automation': 'automation',
+                    'git': 'git',
+                    'tree': 'tree',
+                    'trait': 'trait',
+                    'cleanup': 'cleanup',
+                    'terminal': 'terminal',
+                    'flake': 'flake'
+                };
+                return tagClasses[tag] || '';
+            }
+
+            isRecent(date) {
+                const now = new Date();
+                const diffHours = (now - date) / (1000 * 60 * 60);
+                return diffHours < 24;
+            }
+
+            async selectSummary(summary) {
+                this.currentSummary = summary;
+                
+                document.querySelectorAll('.commit-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                document.querySelector(`[data-summary-id="${summary.id}"]`)?.classList.add('active');
+                
+                const typeIcon = this.getCommitTypeIcon(summary.type);
+                const repoIcon = this.getRepositoryIcon(summary.repository);
+                document.getElementById('contentTitle').innerHTML = `
+                    <span>${typeIcon}</span>
+                    <span>${summary.title}</span>
+                `;
+                
+                document.getElementById('contentMeta').innerHTML = `
+                    <span>
+                        ${repoIcon} ${summary.repository} • ${this.formatDate(summary.date)} • 
+                        ${summary.author} • ${summary.commitHash} • 
+                        ${summary.filesChanged} files changed
+                    </span>
+                `;
+                
+                await this.loadSummaryContent(summary);
+            }
+
+            async loadSummaryContent(summary) {
+                const contentBody = document.getElementById('contentBody');
+                
+                if (this.viewMode === 'preview') {
+                    contentBody.innerHTML = `
+                        <iframe class="commit-summary-frame" src="${summary.path}" 
+                                onload="this.style.opacity=1" 
+                                style="opacity:0; transition: opacity 0.3s ease;">
+                        </iframe>
+                    `;
+                } else {
+                    contentBody.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading source...</span></div>';
+                    
+                    try {
+                        const response = await fetch(summary.path);
+                        const source = await response.text();
+                        contentBody.innerHTML = `
+                            <div style="padding: 20px; font-family: monospace; font-size: 0.875rem; line-height: 1.5; background: var(--bg-tertiary); white-space: pre-wrap; word-wrap: break-word;">
+                                ${this.escapeHtml(source)}
+                            </div>
+                        `;
+                    } catch (error) {
+                        contentBody.innerHTML = `
+                            <div style="padding: 20px; color: var(--error-color);">
+                                <p>Unable to load source code for ${summary.filename}</p>
+                                <p>Error: ${error.message}</p>
+                            </div>
+                        `;
+                    }
+                }
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            setViewMode(mode) {
+                this.viewMode = mode;
+                
+                document.querySelectorAll('.action-btn[data-mode]').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+                
+                if (this.currentSummary) {
+                    this.loadSummaryContent(this.currentSummary);
+                }
+            }
+
+            applyFilters() {
+                let filtered = [...this.allSummaries];
+                
+                // Apply enhanced search filter with tag support
+                if (this.searchTerm) {
+                    filtered = this.applyEnhancedSearch(filtered);
+                }
+                
+                // Apply time filters
+                if (!this.activeFilters.has('all')) {
+                    const now = new Date();
+                    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                    const weekStart = new Date(today.getTime() - (7 * 24 * 60 * 60 * 1000));
+                    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+                    
+                    filtered = filtered.filter(summary => {
+                        if (this.activeFilters.has('today')) {
+                            return summary.date >= today;
+                        }
+                        if (this.activeFilters.has('week')) {
+                            return summary.date >= weekStart;
+                        }
+                        if (this.activeFilters.has('month')) {
+                            return summary.date >= monthStart;
+                        }
+                        return true;
+                    });
+                }
+                
+                this.filteredSummaries = filtered;
+                this.organizeByRepository();
+                this.renderRepositoryList();
+                this.renderStatistics();
+                this.renderRepoBreakdown();
+                this.renderActiveSearchTags();
+            }
+
+            applyEnhancedSearch(files) {
+                const searchTerms = this.parseSearchQuery(this.searchTerm);
+                
+                return files.filter(summary => {
+                    // Check text search terms
+                    const textMatch = searchTerms.textTerms.length === 0 || 
+                        searchTerms.textTerms.every(term => 
+                            summary.title.toLowerCase().includes(term) ||
+                            summary.author.toLowerCase().includes(term) ||
+                            summary.repository.toLowerCase().includes(term) ||
+                            summary.commitHash.toLowerCase().includes(term)
+                        );
+                    
+                    // Check tag filters
+                    const tagMatch = searchTerms.tagTerms.length === 0 || 
+                        searchTerms.tagTerms.every(tag => 
+                            summary.tags.some(summaryTag => summaryTag.toLowerCase().includes(tag)) ||
+                            summary.type.toLowerCase().includes(tag) ||
+                            summary.repository.toLowerCase().includes(tag)
+                        );
+                    
+                    // Check date filters
+                    const dateMatch = searchTerms.dateTerms.length === 0 ||
+                        searchTerms.dateTerms.some(dateStr => {
+                            const summaryDateKey = this.getDateKey(summary.date);
+                            return summaryDateKey === dateStr;
+                        });
+                    
+                    return textMatch && tagMatch && dateMatch;
+                });
+            }
+
+            parseSearchQuery(query) {
+                const terms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                const tagTerms = [];
+                const textTerms = [];
+                const dateTerms = [];
+                
+                terms.forEach(term => {
+                    if (term.startsWith('tag:')) {
+                        // Extract tag after 'tag:' prefix
+                        const tagValue = term.substring(4);
+                        if (tagValue) {
+                            tagTerms.push(tagValue);
+                        }
+                    } else if (term.startsWith('#')) {
+                        // Support hashtag syntax as alternative
+                        const tagValue = term.substring(1);
+                        if (tagValue) {
+                            tagTerms.push(tagValue);
+                        }
+                    } else if (term.startsWith('date:')) {
+                        // Extract date after 'date:' prefix
+                        const dateValue = term.substring(5);
+                        if (dateValue) {
+                            dateTerms.push(dateValue);
+                        }
+                    } else {
+                        textTerms.push(term);
+                    }
+                });
+                
+                return { tagTerms, textTerms, dateTerms };
+            }
+
+            addTagToSearch(tag) {
+                if (tag === 'new') return; // Don't add "new" to search
+                
+                const currentSearch = this.searchTerm.trim();
+                const tagQuery = `tag:${tag}`;
+                const hashtagQuery = `#${tag}`;
+                
+                // Check if this tag is already in the search (either format)
+                const hasTagQuery = currentSearch.includes(tagQuery);
+                const hasHashtagQuery = currentSearch.includes(hashtagQuery);
+                
+                if (hasTagQuery || hasHashtagQuery) {
+                    // Tag exists, remove it (toggle off)
+                    this.removeTagFromSearch(tag);
+                    return;
+                }
+                
+                // Tag doesn't exist, add it (toggle on)
+                const newSearch = currentSearch ? `${currentSearch} ${tagQuery}` : tagQuery;
+                
+                // Update search input and trigger search
+                this.searchTerm = newSearch;
+                document.getElementById('searchInput').value = newSearch;
+                this.applyFilters();
+                
+                // Show visual feedback for adding
+                this.highlightTagInSearch(tag, 'add');
+            }
+
+            removeTagFromSearch(tag) {
+                const tagQuery = `tag:${tag}`;
+                const hashtagQuery = `#${tag}`;
+                
+                // Remove both tag: and # syntax
+                let newSearch = this.searchTerm
+                    .replace(new RegExp(`\\s*${tagQuery}\\s*`, 'gi'), ' ')
+                    .replace(new RegExp(`\\s*${hashtagQuery}\\s*`, 'gi'), ' ')
+                    .trim()
+                    .replace(/\s+/g, ' '); // Clean up multiple spaces
+                
+                this.searchTerm = newSearch;
+                document.getElementById('searchInput').value = newSearch;
+                this.applyFilters();
+                
+                // Show visual feedback for removal
+                this.highlightTagInSearch(tag, 'remove');
+            }
+
+            getActiveSearchTags() {
+                const searchTerms = this.parseSearchQuery(this.searchTerm);
+                return searchTerms.tagTerms;
+            }
+
+            renderActiveSearchTags() {
+                const container = document.getElementById('activeTagFilters');
+                const section = document.getElementById('tagFilterSection');
+                const activeTags = this.getActiveSearchTags();
+                
+                if (activeTags.length === 0) {
+                    section.style.display = 'none';
+                    return;
+                }
+                
+                section.style.display = 'block';
+                
+                // Update section title to reflect search-based filtering
+                const titleElement = section.querySelector('.filter-title');
+                titleElement.textContent = 'Active Search Tags';
+                
+                let html = '';
+                activeTags.forEach(tag => {
+                    const badgeClass = this.getTagBadgeClass(tag);
+                    html += `
+                        <div class="active-tag-filter ${badgeClass}" data-tag="${tag}">
+                            <span>tag:${tag}</span>
+                            <span class="remove-tag" data-tag="${tag}" title="Remove from search">×</span>
+                        </div>
+                    `;
+                });
+                
+                if (activeTags.length > 1) {
+                    html += `
+                        <div class="clear-tags-btn" id="clearAllSearchTags">
+                            Clear All Tags
+                        </div>
+                    `;
+                }
+                
+                container.innerHTML = html;
+            }
+
+            clearAllSearchTags() {
+                // Remove all tag: and # terms from search
+                const searchTerms = this.parseSearchQuery(this.searchTerm);
+                const newSearch = this.searchTerm
+                    .replace(/\s*tag:\w+\s*/gi, ' ')
+                    .replace(/\s*#\w+\s*/gi, ' ')
+                    .trim()
+                    .replace(/\s+/g, ' ');
+                
+                this.searchTerm = newSearch;
+                document.getElementById('searchInput').value = newSearch;
+                this.applyFilters();
+            }
+
+            highlightTagInSearch(tag, action = 'add') {
+                const searchInput = document.getElementById('searchInput');
+                
+                if (action === 'add') {
+                    // Green glow for adding tags
+                    searchInput.style.boxShadow = '0 0 8px rgba(59, 185, 80, 0.6)';
+                    searchInput.style.borderColor = 'rgba(59, 185, 80, 0.8)';
+                } else {
+                    // Red glow for removing tags
+                    searchInput.style.boxShadow = '0 0 8px rgba(248, 81, 73, 0.6)';
+                    searchInput.style.borderColor = 'rgba(248, 81, 73, 0.8)';
+                }
+                
+                setTimeout(() => {
+                    searchInput.style.boxShadow = '';
+                    searchInput.style.borderColor = '';
+                }, 500);
+                
+                // Highlight the clicked tag with appropriate color
+                const tagElements = document.querySelectorAll(`[data-tag="${tag}"]`);
+                tagElements.forEach(element => {
+                    if (element.classList.contains('commit-badge')) {
+                        element.style.transform = 'scale(1.1)';
+                        
+                        if (action === 'add') {
+                            element.style.boxShadow = '0 0 8px rgba(59, 185, 80, 0.8)';
+                            element.style.borderColor = 'rgba(59, 185, 80, 0.8)';
+                        } else {
+                            element.style.boxShadow = '0 0 8px rgba(248, 81, 73, 0.8)';
+                            element.style.borderColor = 'rgba(248, 81, 73, 0.8)';
+                        }
+                        
+                        setTimeout(() => {
+                            element.style.transform = '';
+                            element.style.boxShadow = '';
+                            element.style.borderColor = '';
+                        }, 300);
+                    }
+                });
+            }
+
+            renderStatistics() {
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const weekStart = new Date(today.getTime() - (7 * 24 * 60 * 60 * 1000));
+                
+                const todaySummaries = this.allSummaries.filter(s => s.date >= today);
+                const weekSummaries = this.allSummaries.filter(s => s.date >= weekStart);
+                
+                document.getElementById('totalCommits').textContent = this.allSummaries.length;
+                document.getElementById('totalRepositories').textContent = this.repositories.size;
+                document.getElementById('todayCommits').textContent = todaySummaries.length;
+                document.getElementById('weekCommits').textContent = weekSummaries.length;
+                
+                document.getElementById('totalSummaries').textContent = this.allSummaries.length;
+                document.getElementById('totalRepos').textContent = this.repositories.size;
+                document.getElementById('recentActivity').textContent = todaySummaries.length;
+            }
+
+            renderRepoBreakdown() {
+                const container = document.getElementById('repoBreakdown');
+                
+                if (this.repositories.size === 0) {
+                    container.innerHTML = '<div class="loading"><span>No repositories</span></div>';
+                    return;
+                }
+                
+                let html = '';
+                for (const [repoName, repo] of this.repositories.entries()) {
+                    html += `
+                        <div class="repo-stat">
+                            <div class="repo-stat-name">
+                                <span>${repo.icon}</span>
+                                <span>${repoName}</span>
+                            </div>
+                            <div class="repo-stat-count">${repo.summaries.length}</div>
+                        </div>
+                    `;
+                }
+                
+                container.innerHTML = html;
+            }
+
+            renderRecentActivity() {
+                const container = document.getElementById('recentActivity');
+                const recentSummaries = this.allSummaries.slice(0, 8);
+                
+                if (recentSummaries.length === 0) {
+                    container.innerHTML = '<div class="loading"><span>No recent activity</span></div>';
+                    return;
+                }
+                
+                const html = recentSummaries.map(summary => `
+                    <div class="activity-item" data-summary-id="${summary.id}">
+                        <div class="activity-dot"></div>
+                        <div class="activity-content">
+                            <div class="activity-title">${summary.title}</div>
+                            <div class="activity-time">${this.formatRelativeTime(summary.date)} • ${this.getRepositoryIcon(summary.repository)} ${summary.repository}</div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                container.innerHTML = html;
+            }
+
+            formatDate(date) {
+                return new Intl.DateTimeFormat('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }).format(date);
+            }
+
+            formatRelativeTime(date) {
+                const now = new Date();
+                const diffMs = now - date;
+                const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+                const diffDays = Math.floor(diffHours / 24);
+                
+                if (diffHours < 1) return 'Just now';
+                if (diffHours < 24) return `${diffHours}h ago`;
+                if (diffDays < 7) return `${diffDays}d ago`;
+                return date.toLocaleDateString();
+            }
+
+            // Calendar Methods
+            initializeCalendar() {
+                this.generateActivityData();
+                this.calculateStreaks();
+            }
+
+            generateActivityData() {
+                this.activityData.clear();
+                
+                // Generate activity data for each day
+                this.allSummaries.forEach(summary => {
+                    const dateKey = this.getDateKey(summary.date);
+                    if (!this.activityData.has(dateKey)) {
+                        this.activityData.set(dateKey, {
+                            count: 0,
+                            repositories: new Set(),
+                            summaries: []
+                        });
+                    }
+                    
+                    const dayData = this.activityData.get(dateKey);
+                    dayData.count++;
+                    dayData.repositories.add(summary.repository);
+                    dayData.summaries.push(summary);
+                });
+            }
+
+            calculateStreaks() {
+                const sortedDates = Array.from(this.activityData.keys()).sort();
+                this.streakData = [];
+                
+                let currentStreak = [];
+                let previousDate = null;
+                
+                sortedDates.forEach(dateKey => {
+                    const currentDate = new Date(dateKey);
+                    
+                    if (previousDate) {
+                        const dayDiff = (currentDate - previousDate) / (1000 * 60 * 60 * 24);
+                        if (dayDiff === 1) {
+                            currentStreak.push(dateKey);
+                        } else {
+                            if (currentStreak.length > 1) {
+                                this.streakData.push([...currentStreak]);
+                            }
+                            currentStreak = [dateKey];
+                        }
+                    } else {
+                        currentStreak = [dateKey];
+                    }
+                    
+                    previousDate = currentDate;
+                });
+                
+                if (currentStreak.length > 1) {
+                    this.streakData.push(currentStreak);
+                }
+            }
+
+            renderTimeline() {
+                const track = document.getElementById('timelineTrack');
+                const rangeElement = document.getElementById('timelineRange');
+                
+                const today = new Date();
+                const days = [];
+                
+                // Generate last 14 days
+                for (let i = 13; i >= 0; i--) {
+                    const date = new Date(today);
+                    date.setDate(today.getDate() - i);
+                    days.push(date);
+                }
+                
+                const html = days.map(date => {
+                    const dateKey = this.getDateKey(date);
+                    const hasCommits = this.activityData.has(dateKey);
+                    const isToday = this.isToday(date);
+                    const isSelected = this.selectedCalendarDate && 
+                        this.getDateKey(this.selectedCalendarDate) === dateKey;
+                    
+                    let classes = 'timeline-day';
+                    if (hasCommits) classes += ' has-commits';
+                    if (isToday) classes += ' today';
+                    if (isSelected) classes += ' selected';
+                    
+                    const activityData = this.activityData.get(dateKey);
+                    const tooltip = hasCommits ? 
+                        `${date.toLocaleDateString()}: ${activityData.count} commits` : 
+                        date.toLocaleDateString();
+                    
+                    return `<div class="${classes}" data-date="${dateKey}" title="${tooltip}"></div>`;
+                }).join('');
+                
+                track.innerHTML = html;
+                rangeElement.textContent = `${days[0].toLocaleDateString()} - ${days[days.length - 1].toLocaleDateString()}`;
+            }
+
+            renderCalendar() {
+                const grid = document.getElementById('calendarGrid');
+                const monthYear = document.getElementById('calendarMonthYear');
+                
+                const year = this.currentCalendarDate.getFullYear();
+                const month = this.currentCalendarDate.getMonth();
+                
+                monthYear.textContent = new Intl.DateTimeFormat('en-US', {
+                    month: 'long',
+                    year: 'numeric'
+                }).format(this.currentCalendarDate);
+                
+                // Clear grid
+                grid.innerHTML = '';
+                
+                // Add day headers
+                const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                dayHeaders.forEach(day => {
+                    const header = document.createElement('div');
+                    header.className = 'calendar-day-header';
+                    header.textContent = day;
+                    grid.appendChild(header);
+                });
+                
+                // Get calendar data
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                const startDate = new Date(firstDay);
+                startDate.setDate(startDate.getDate() - firstDay.getDay());
+                
+                // Generate calendar days
+                const today = new Date();
+                for (let i = 0; i < 42; i++) {
+                    const currentDate = new Date(startDate);
+                    currentDate.setDate(startDate.getDate() + i);
+                    
+                    const dayElement = document.createElement('div');
+                    dayElement.className = 'calendar-day';
+                    dayElement.textContent = currentDate.getDate();
+                    dayElement.dataset.date = this.getDateKey(currentDate);
+                    
+                    // Add classes
+                    if (currentDate.getMonth() !== month) {
+                        dayElement.classList.add('other-month');
+                    }
+                    
+                    if (this.isToday(currentDate)) {
+                        dayElement.classList.add('today');
+                    }
+                    
+                    if (this.selectedCalendarDate && 
+                        this.getDateKey(currentDate) === this.getDateKey(this.selectedCalendarDate)) {
+                        dayElement.classList.add('selected');
+                    }
+                    
+                    // Add activity styling
+                    const dateKey = this.getDateKey(currentDate);
+                    const activityData = this.activityData.get(dateKey);
+                    
+                    if (activityData) {
+                        const intensity = Math.min(5, Math.max(1, activityData.count));
+                        dayElement.classList.add(`activity-${intensity}`);
+                        
+                        // Add repository indicators
+                        const indicators = document.createElement('div');
+                        indicators.className = 'repo-indicators';
+                        
+                        Array.from(activityData.repositories).slice(0, 3).forEach(repo => {
+                            const dot = document.createElement('div');
+                            dot.className = `repo-dot ${repo === '.config' ? 'config' : 'rust'}`;
+                            indicators.appendChild(dot);
+                        });
+                        
+                        dayElement.appendChild(indicators);
+                    }
+                    
+                    // Add streak indicators
+                    const isInStreak = this.streakData.some(streak => streak.includes(dateKey));
+                    if (isInStreak) {
+                        dayElement.classList.add('streak');
+                        
+                        // Mark streak start
+                        const isStreakStart = this.streakData.some(streak => streak[0] === dateKey && streak.length > 2);
+                        if (isStreakStart) {
+                            dayElement.classList.add('streak-start');
+                        }
+                    }
+                    
+                    grid.appendChild(dayElement);
+                }
+            }
+
+            selectCalendarDate(date) {
+                this.selectedCalendarDate = this.selectedCalendarDate && 
+                    this.getDateKey(this.selectedCalendarDate) === this.getDateKey(date) ? null : date;
+                
+                // Apply date filter to search
+                if (this.selectedCalendarDate) {
+                    const dateStr = this.selectedCalendarDate.toISOString().split('T')[0];
+                    const dateQuery = `date:${dateStr}`;
+                    
+                    // Remove existing date queries and add new one
+                    let newSearch = this.searchTerm.replace(/\s*date:\S+\s*/gi, ' ').trim();
+                    newSearch = newSearch ? `${newSearch} ${dateQuery}` : dateQuery;
+                    
+                    this.searchTerm = newSearch;
+                    document.getElementById('searchInput').value = newSearch;
+                } else {
+                    // Remove date filter
+                    const newSearch = this.searchTerm.replace(/\s*date:\S+\s*/gi, ' ').trim().replace(/\s+/g, ' ');
+                    this.searchTerm = newSearch;
+                    document.getElementById('searchInput').value = newSearch;
+                }
+                
+                this.applyFilters();
+                this.renderCalendar();
+                this.renderTimeline();
+            }
+
+            navigateToToday() {
+                this.currentCalendarDate = new Date();
+                this.selectCalendarDate(new Date());
+            }
+
+            navigateToFirstCommit() {
+                if (this.allSummaries.length > 0) {
+                    const firstCommit = this.allSummaries[this.allSummaries.length - 1];
+                    this.currentCalendarDate = new Date(firstCommit.date);
+                    this.selectCalendarDate(new Date(firstCommit.date));
+                }
+            }
+
+            navigateToLatestCommit() {
+                if (this.allSummaries.length > 0) {
+                    const latestCommit = this.allSummaries[0];
+                    this.currentCalendarDate = new Date(latestCommit.date);
+                    this.selectCalendarDate(new Date(latestCommit.date));
+                }
+            }
+
+            navigateToLongestStreak() {
+                if (this.streakData.length > 0) {
+                    const longestStreak = this.streakData.reduce((longest, current) => 
+                        current.length > longest.length ? current : longest
+                    );
+                    
+                    const streakStartDate = new Date(longestStreak[0]);
+                    this.currentCalendarDate = new Date(streakStartDate);
+                    this.selectCalendarDate(streakStartDate);
+                }
+            }
+
+            showCalendarTooltip(event, date) {
+                const tooltip = document.getElementById('calendarTooltip');
+                const dateKey = this.getDateKey(date);
+                const activityData = this.activityData.get(dateKey);
+                
+                const tooltipDate = tooltip.querySelector('.tooltip-date');
+                const tooltipActivity = tooltip.querySelector('.tooltip-activity');
+                const tooltipRepos = tooltip.querySelector('.tooltip-repos');
+                
+                tooltipDate.textContent = date.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                
+                if (activityData) {
+                    tooltipActivity.textContent = `${activityData.count} commit${activityData.count !== 1 ? 's' : ''}`;
+                    
+                    const repoList = Array.from(activityData.repositories).map(repo => {
+                        const icon = repo === '.config' ? '⚙️' : '🦀';
+                        return `<span class="tooltip-repo">${icon} ${repo}</span>`;
+                    }).join('');
+                    tooltipRepos.innerHTML = repoList;
+                } else {
+                    tooltipActivity.textContent = 'No commits';
+                    tooltipRepos.innerHTML = '';
+                }
+                
+                // Position tooltip
+                const rect = event.target.getBoundingClientRect();
+                tooltip.style.left = `${rect.left + rect.width / 2}px`;
+                tooltip.style.top = `${rect.top - 10}px`;
+                tooltip.style.transform = 'translateX(-50%) translateY(-100%)';
+                tooltip.classList.add('visible');
+            }
+
+            hideCalendarTooltip() {
+                document.getElementById('calendarTooltip').classList.remove('visible');
+            }
+
+            getDateKey(date) {
+                return date.toISOString().split('T')[0];
+            }
+
+            isToday(date) {
+                const today = new Date();
+                return this.getDateKey(date) === this.getDateKey(today);
+            }
+                if (!this.currentSummary) return;
+                
+                const shareUrl = `${window.location.origin}${window.location.pathname}?summary=${this.currentSummary.id}`;
+                
+                if (navigator.share) {
+                    navigator.share({
+                        title: `Commit Summary - ${this.currentSummary.title}`,
+                        text: `View commit summary: ${this.currentSummary.title}`,
+                        url: shareUrl
+                    });
+                } else {
+                    navigator.clipboard.writeText(shareUrl).then(() => {
+                        alert('Share link copied to clipboard!');
+                    });
+                }
+            }
+
+            setupEventListeners() {
+                document.getElementById('themeToggle').addEventListener('click', () => {
+                    this.toggleTheme();
+                });
+
+                document.getElementById('searchInput').addEventListener('input', (e) => {
+                    this.searchTerm = e.target.value;
+                    this.applyFilters();
+                });
+
+                document.addEventListener('click', (e) => {
+                    // Handle tag badge clicks - add to search
+                    if (e.target.classList.contains('commit-badge') && e.target.dataset.tag) {
+                        e.stopPropagation(); // Prevent commit item selection
+                        const tag = e.target.dataset.tag;
+                        this.addTagToSearch(tag);
+                        return;
+                    }
+                    
+                    // Handle active search tag removal
+                    if (e.target.classList.contains('remove-tag')) {
+                        e.stopPropagation();
+                        const tag = e.target.dataset.tag;
+                        this.removeTagFromSearch(tag);
+                        return;
+                    }
+                    
+                    // Handle clear all search tags
+                    if (e.target.id === 'clearAllSearchTags') {
+                        this.clearAllSearchTags();
+                        return;
+                    }
+                    
+                    // Handle time filter chips
+                    if (e.target.closest('.filter-chip')) {
+                        const chip = e.target.closest('.filter-chip');
+                        const filter = chip.dataset.filter;
+                        
+                        if (filter === 'all') {
+                            this.activeFilters.clear();
+                            this.activeFilters.add('all');
+                        } else {
+                            this.activeFilters.delete('all');
+                            if (this.activeFilters.has(filter)) {
+                                this.activeFilters.delete(filter);
+                            } else {
+                                this.activeFilters.add(filter);
+                            }
+                            
+                            if (this.activeFilters.size === 0) {
+                                this.activeFilters.add('all');
+                            }
+                        }
+                        
+                        this.updateFilterChips();
+                        this.applyFilters();
+                    }
+                    
+                    // Handle repository header clicks
+                    if (e.target.closest('.repo-header')) {
+                        const repoName = e.target.closest('.repo-header').dataset.repo;
+                        const repoGroup = document.querySelector(`[data-repo="${repoName}"].repo-group`);
+                        repoGroup.classList.toggle('collapsed');
+                        
+                        const repo = this.repositories.get(repoName);
+                        if (repo) {
+                            repo.collapsed = repoGroup.classList.contains('collapsed');
+                        }
+                    }
+                    
+                    // Handle commit item clicks
+                    if (e.target.closest('.commit-item')) {
+                        const summaryId = e.target.closest('.commit-item').dataset.summaryId;
+                        const summary = this.allSummaries.find(s => s.id === summaryId);
+                        if (summary) {
+                            this.selectSummary(summary);
+                        }
+                    }
+                    
+                    // Handle activity item clicks
+                    if (e.target.closest('.activity-item')) {
+                        const summaryId = e.target.closest('.activity-item').dataset.summaryId;
+                        const summary = this.allSummaries.find(s => s.id === summaryId);
+                        if (summary) {
+                            this.selectSummary(summary);
+                        }
+                    }
+                });
+
+                document.getElementById('previewBtn').addEventListener('click', () => {
+                    this.setViewMode('preview');
+                });
+
+                document.getElementById('sourceBtn').addEventListener('click', () => {
+                    this.setViewMode('source');
+                });
+
+                document.getElementById('shareBtn').addEventListener('click', () => {
+                    this.shareCurrentSummary();
+                });
+
+                // Calendar event listeners
+                document.getElementById('prevMonth').addEventListener('click', () => {
+                    this.currentCalendarDate.setMonth(this.currentCalendarDate.getMonth() - 1);
+                    this.renderCalendar();
+                });
+
+                document.getElementById('nextMonth').addEventListener('click', () => {
+                    this.currentCalendarDate.setMonth(this.currentCalendarDate.getMonth() + 1);
+                    this.renderCalendar();
+                });
+
+                document.getElementById('todayBtn').addEventListener('click', () => {
+                    this.navigateToToday();
+                });
+
+                document.getElementById('firstCommitBtn').addEventListener('click', () => {
+                    this.navigateToFirstCommit();
+                });
+
+                document.getElementById('lastCommitBtn').addEventListener('click', () => {
+                    this.navigateToLatestCommit();
+                });
+
+                document.getElementById('streakBtn').addEventListener('click', () => {
+                    this.navigateToLongestStreak();
+                });
+
+                // Calendar day clicks
+                document.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('calendar-day') && !e.target.classList.contains('other-month')) {
+                        const dateKey = e.target.dataset.date;
+                        if (dateKey) {
+                            this.selectCalendarDate(new Date(dateKey));
+                        }
+                    }
+                    
+                    if (e.target.classList.contains('timeline-day')) {
+                        const dateKey = e.target.dataset.date;
+                        if (dateKey) {
+                            this.selectCalendarDate(new Date(dateKey));
+                        }
+                    }
+                });
+
+                // Calendar tooltips
+                document.addEventListener('mouseenter', (e) => {
+                    if (e.target.classList.contains('calendar-day') && !e.target.classList.contains('other-month')) {
+                        const dateKey = e.target.dataset.date;
+                        if (dateKey) {
+                            this.showCalendarTooltip(e, new Date(dateKey));
+                        }
+                    }
+                }, true);
+
+                document.addEventListener('mouseleave', (e) => {
+                    if (e.target.classList.contains('calendar-day')) {
+                        this.hideCalendarTooltip();
+                    }
+                }, true);
+
+                this.handleUrlParameters();
+            }
+
+            updateFilterChips() {
+                document.querySelectorAll('.filter-chip').forEach(chip => {
+                    const filter = chip.dataset.filter;
+                    if (this.activeFilters.has(filter)) {
+                        chip.classList.add('active');
+                    } else {
+                        chip.classList.remove('active');
+                    }
+                });
+            }
+
+            handleUrlParameters() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const summaryId = urlParams.get('summary');
+                
+                if (summaryId) {
+                    const summary = this.allSummaries.find(s => s.id === summaryId);
+                    if (summary) {
+                        this.selectSummary(summary);
+                    }
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new MultiRepoCommitDashboard();
+        });
+    </script>
+</body>
+</html>
