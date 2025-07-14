@@ -958,7 +958,8 @@
                 this.searchTerm = '';
                 this.activeFilters = new Set(['all']);
                 this.isDarkMode = localStorage.getItem('darkMode') !== 'false';
-                this.baseUrl = 'https://sugiura-hiromiti.github.io/commit_summery';
+                // Use relative paths for GitHub Pages compatibility
+                this.baseUrl = window.location.origin + window.location.pathname.replace('/index.html', '').replace(/\/$/, '');
                 
                 this.init();
             }
@@ -1061,8 +1062,16 @@
 
             async loadCommitSummaries() {
                 try {
-                    // Simplified data loading - no async file checking needed for GitHub Pages
+                    // Real commit summary files based on actual repository structure
                     const summaryData = [
+                        {
+                            path: '.config/2025/07/15/2025-07-15_00-49-12.html',
+                            repository: '.config',
+                            title: 'feat: add new configuration updates',
+                            date: new Date('2025-07-15T00:49:12'),
+                            type: 'feat',
+                            tags: ['config', 'update', 'automation']
+                        },
                         {
                             path: '.config/2025/07/14/2025-07-14_21-28-43.html',
                             repository: '.config',
@@ -1080,12 +1089,28 @@
                             tags: ['nix', 'flake', 'terminal', 'config']
                         },
                         {
-                            path: 'oso/2025/07/14/2025-07-14_23-22-35.html',
-                            repository: 'oso',
-                            title: 'refactor(tree): clean up unused import and simplify trait method signature',
-                            date: new Date('2025-07-14T23:22:35'),
+                            path: 'commit_summery/2025/07/15/2025-07-15_01-24-44.html',
+                            repository: 'commit_summery',
+                            title: 'feat: enhance dashboard with improved card layout',
+                            date: new Date('2025-07-15T01:24:44'),
+                            type: 'feat',
+                            tags: ['dashboard', 'ui', 'github-pages']
+                        },
+                        {
+                            path: 'commit_summery/2025/07/15/2025-07-15_01-08-32.html',
+                            repository: 'commit_summery',
+                            title: 'refactor: optimize dashboard performance',
+                            date: new Date('2025-07-15T01:08:32'),
                             type: 'refactor',
-                            tags: ['rust', 'tree', 'trait', 'cleanup']
+                            tags: ['performance', 'optimization', 'web']
+                        },
+                        {
+                            path: 'commit_summery/2025/07/15/2025-07-15_00-43-19.html',
+                            repository: 'commit_summery',
+                            title: 'fix: resolve GitHub Pages deployment issues',
+                            date: new Date('2025-07-15T00:43:19'),
+                            type: 'fix',
+                            tags: ['github-pages', 'deployment', 'fix']
                         },
                         {
                             path: 'commit_summery/2025/07/15/2025-07-15_00-13-12.html',
@@ -1096,61 +1121,30 @@
                             tags: ['dashboard', 'web', 'github-pages']
                         },
                         {
+                            path: 'oso/2025/07/14/2025-07-14_23-22-35.html',
+                            repository: 'oso',
+                            title: 'refactor(tree): clean up unused import and simplify trait method signature',
+                            date: new Date('2025-07-14T23:22:35'),
+                            type: 'refactor',
+                            tags: ['rust', 'tree', 'trait', 'cleanup']
+                        },
+                        {
                             path: 'oso/2025/01/14/20250714_235702.html',
                             repository: 'oso',
                             title: 'feat: implement new tree traversal algorithm',
                             date: new Date('2025-01-14T23:57:02'),
                             type: 'feat',
                             tags: ['rust', 'algorithm', 'performance']
-                        },
-                        {
-                            path: '.config/2025/07/13/2025-07-13_15-30-22.html',
-                            repository: '.config',
-                            title: 'chore: update shell configuration and aliases',
-                            date: new Date('2025-07-13T15:30:22'),
-                            type: 'chore',
-                            tags: ['shell', 'config', 'aliases']
-                        },
-                        {
-                            path: 'oso/2025/07/12/2025-07-12_18-45-11.html',
-                            repository: 'oso',
-                            title: 'fix: resolve memory leak in tree operations',
-                            date: new Date('2025-07-12T18:45:11'),
-                            type: 'fix',
-                            tags: ['rust', 'memory', 'performance']
-                        },
-                        {
-                            path: 'commit_summery/2025/07/11/2025-07-11_09-15-33.html',
-                            repository: 'commit_summery',
-                            title: 'docs: update README with deployment instructions',
-                            date: new Date('2025-07-11T09:15:33'),
-                            type: 'docs',
-                            tags: ['documentation', 'deployment']
-                        },
-                        {
-                            path: '.config/2025/07/10/2025-07-10_14-22-44.html',
-                            repository: '.config',
-                            title: 'feat: add new development environment setup',
-                            date: new Date('2025-07-10T14:22:44'),
-                            type: 'feat',
-                            tags: ['development', 'environment', 'setup']
-                        },
-                        {
-                            path: 'oso/2025/07/09/2025-07-09_11-33-55.html',
-                            repository: 'oso',
-                            title: 'test: add comprehensive unit tests for tree module',
-                            date: new Date('2025-07-09T11:33:55'),
-                            type: 'test',
-                            tags: ['rust', 'testing', 'unit-tests']
                         }
                     ];
 
-                    // Create summary objects immediately without async operations
+                    // Create summary objects with correct GitHub Pages URLs
                     this.allSummaries = summaryData.map(data => ({
                         id: this.generateId(data.path),
                         filename: data.path.split('/').pop(),
                         path: data.path,
-                        fullUrl: `${this.baseUrl}/${data.path}`,
+                        // Use relative path for GitHub Pages - the files are served directly
+                        fullUrl: data.path,
                         repository: data.repository,
                         repositoryUrl: `https://github.com/sugiura-hiromiti/${data.repository}`,
                         date: data.date,
@@ -1164,6 +1158,7 @@
                     })).sort((a, b) => b.date - a.date);
 
                     console.log('Loaded summaries:', this.allSummaries.length);
+                    console.log('Sample URL:', this.allSummaries[0]?.fullUrl);
 
                 } catch (error) {
                     console.error('Error loading commit summaries:', error);
@@ -1321,7 +1316,7 @@
                     </span>
                 `;
                 
-                // Load content in iframe
+                // Load content in iframe using relative path
                 const contentBody = document.getElementById('contentBody');
                 contentBody.innerHTML = `
                     <iframe class="commit-summary-frame" src="${summary.path}" 
@@ -1581,7 +1576,8 @@
             shareCurrentSummary() {
                 if (!this.currentSummary) return;
                 
-                const shareUrl = this.currentSummary.fullUrl;
+                // Create the full GitHub Pages URL for sharing
+                const shareUrl = `${window.location.origin}${window.location.pathname.replace('/index.html', '')}/${this.currentSummary.path}`;
                 
                 if (navigator.share) {
                     navigator.share({
@@ -1592,6 +1588,9 @@
                 } else {
                     navigator.clipboard.writeText(shareUrl).then(() => {
                         alert('Share link copied to clipboard!');
+                    }).catch(() => {
+                        // Fallback: show the URL in a prompt
+                        prompt('Copy this link:', shareUrl);
                     });
                 }
             }
