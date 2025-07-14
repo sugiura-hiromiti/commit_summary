@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git Commit Summary - oso Repository</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .status-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #28a745;
+        }
+        .status-card h3 {
+            margin: 0 0 10px 0;
+            color: #495057;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-card .value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #28a745;
+        }
+        .commit-section {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .commit-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #0366d6;
+            cursor: pointer;
+            text-decoration: none;
+            margin-bottom: 15px;
+            display: block;
+        }
+        .commit-title:hover {
+            text-decoration: underline;
+        }
+        .commit-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .meta-label {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+        .meta-value {
+            font-weight: 500;
+            color: #495057;
+        }
+        .hash-copy {
+            background: #e9ecef;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-block;
+        }
+        .hash-copy:hover {
+            background: #dee2e6;
+        }
+        .commit-body {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #0366d6;
+        }
+        .diff-section {
+            margin-top: 20px;
+        }
+        .file-header {
+            background: #24292e;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 6px 6px 0 0;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .diff-content {
+            background: #f6f8fa;
+            border: 1px solid #e1e4e8;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            overflow-x: auto;
+        }
+        .diff-line {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            padding: 2px 10px;
+            margin: 0;
+            white-space: pre;
+        }
+        .diff-context {
+            background: #f6f8fa;
+            color: #586069;
+        }
+        .diff-addition {
+            background: #e6ffed;
+            color: #22863a;
+        }
+        .diff-deletion {
+            background: #ffeef0;
+            color: #d73a49;
+        }
+        .diff-header {
+            background: #f1f8ff;
+            color: #0366d6;
+            font-weight: 600;
+        }
+        .overview {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .overview-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            text-align: center;
+        }
+        .stat-item {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #0366d6;
+            display: block;
+        }
+        .stat-label {
+            color: #6c757d;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 Git Commit Summary</h1>
+        <p>Repository: <strong>oso</strong> | Generated: <strong>2025-07-14 23:22:35</strong></p>
+    </div>
+
+    <div class="status-grid">
+        <div class="status-card">
+            <h3>Operation Status</h3>
+            <div class="value">✅ Success</div>
+        </div>
+        <div class="status-card">
+            <h3>Push Status</h3>
+            <div class="value">✅ Pushed</div>
+        </div>
+        <div class="status-card">
+            <h3>Git Branch</h3>
+            <div class="value">main</div>
+        </div>
+        <div class="status-card">
+            <h3>Remote Repository</h3>
+            <div class="value">github.personal:sugiura-hiromiti/oso</div>
+        </div>
+    </div>
+
+    <div class="commit-section">
+        <a href="https://github.com/sugiura-hiromiti/oso/commit/28ada39e725bfd614e3f875e271ffb874bdfbb98" 
+           class="commit-title" target="_blank">
+            refactor(tree): clean up unused import and simplify trait method signature
+        </a>
+        
+        <div class="commit-meta">
+            <div class="meta-item">
+                <div class="meta-label">Commit Hash</div>
+                <div class="meta-value">
+                    <span class="hash-copy" onclick="navigator.clipboard.writeText('28ada39')" title="Click to copy">
+                        28ada39
+                    </span>
+                </div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">Author</div>
+                <div class="meta-value">sugiura-hiromiti &lt;sugiura130418@icloud.com&gt;</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">Files Changed</div>
+                <div class="meta-value">1 file</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">Insertions</div>
+                <div class="meta-value" style="color: #28a745;">+2</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">Deletions</div>
+                <div class="meta-value" style="color: #dc3545;">-2</div>
+            </div>
+        </div>
+
+        <div class="commit-body">
+            <h4>📝 Commit Message</h4>
+            <ul>
+                <li>Comment out unused <code>oso_error::Rslt</code> import</li>
+                <li>Remove unnecessary <code>use&lt;'a,&gt;</code> clause from <code>parent</code> method return type</li>
+                <li>Improves code clarity by removing unused dependencies</li>
+            </ul>
+        </div>
+
+        <div class="diff-section">
+            <div class="file-header">
+                📄 oso_no_std_shared/src/data/tree.rs
+            </div>
+            <div class="diff-content">
+                <div class="diff-line diff-header">@@ -1,6 +1,6 @@</div>
+                <div class="diff-line diff-context"> //! provide tree structure data type and its manipulation functionality</div>
+                <div class="diff-line diff-context"> </div>
+                <div class="diff-line diff-deletion">-use oso_error::Rslt;</div>
+                <div class="diff-line diff-addition">+// use oso_error::Rslt;</div>
+                <div class="diff-line diff-context"> </div>
+                <div class="diff-line diff-context"> pub type WalkRslt&lt;'a, N, T,&gt; = impl WalkTried&lt;'a, N, T,&gt;;</div>
+                <div class="diff-line diff-context"> </div>
+                <div class="diff-line diff-header">@@ -26,7 +26,7 @@ where</div>
+                <div class="diff-line diff-context"> 	fn current(&amp;self,) -&gt; Self;</div>
+                <div class="diff-line diff-context"> </div>
+                <div class="diff-line diff-context"> 	fn children(&amp;self,) -&gt; WalkRslt&lt;'a, N, Self,&gt;;</div>
+                <div class="diff-line diff-deletion">-	fn parent(&amp;self,) -&gt; WalkRslt&lt;'a, N, Self,&gt; + use&lt;'a,&gt;;</div>
+                <div class="diff-line diff-addition">+	fn parent(&amp;self,) -&gt; WalkRslt&lt;'a, N, Self,&gt;;</div>
+                <div class="diff-line diff-context"> 	// TODO: handle opaque type,  recursive trait method and lifetime at once</div>
+                <div class="diff-line diff-context"> 	#[define_opaque(WalkRslt)]</div>
+                <div class="diff-line diff-context"> 	fn nth_ancestor(&amp;self, n: usize,) -&gt; WalkRslt&lt;'a, N, Self,&gt; {</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="overview">
+        <h2>📊 Summary Overview</h2>
+        <div class="overview-stats">
+            <div class="stat-item">
+                <span class="stat-number">1</span>
+                <span class="stat-label">Commits</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">1</span>
+                <span class="stat-label">Files Changed</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">2</span>
+                <span class="stat-label">Insertions</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">2</span>
+                <span class="stat-label">Deletions</span>
+            </div>
+        </div>
+        <p style="margin-top: 30px; text-align: center; color: #6c757d;">
+            This commit focuses on code cleanup in the tree data structure module, removing unused imports and simplifying trait method signatures for better maintainability.
+        </p>
+    </div>
+
+    <script>
+        // Add click-to-copy functionality for hash
+        document.querySelectorAll('.hash-copy').forEach(element => {
+            element.addEventListener('click', function() {
+                const text = this.textContent;
+                navigator.clipboard.writeText(text).then(() => {
+                    const original = this.textContent;
+                    this.textContent = 'Copied!';
+                    this.style.background = '#28a745';
+                    this.style.color = 'white';
+                    setTimeout(() => {
+                        this.textContent = original;
+                        this.style.background = '#e9ecef';
+                        this.style.color = '#495057';
+                    }, 1000);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
