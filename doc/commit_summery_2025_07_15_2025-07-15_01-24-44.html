@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commit Summary - commit_summery - 2025-07-15</title>
+    <style>
+        :root {
+            --primary-color: #0366d6;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+            --dark-color: #343a40;
+            --light-color: #f8f9fa;
+            --border-color: #e1e4e8;
+            --code-bg: #f6f8fa;
+            --diff-add: #e6ffed;
+            --diff-del: #ffeef0;
+            --diff-add-border: #34d058;
+            --diff-del-border: #d73a49;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #24292e;
+            background-color: #ffffff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), #0256cc);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(3, 102, 214, 0.15);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .status-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .status-card h3 {
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .status-success {
+            color: var(--success-color);
+        }
+
+        .status-link {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .status-link:hover {
+            text-decoration: underline;
+        }
+
+        .tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .tag {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .tag.feat { background: var(--success-color); }
+        .tag.fix { background: var(--danger-color); }
+        .tag.docs { background: var(--info-color); }
+        .tag.style { background: var(--warning-color); color: #000; }
+        .tag.refactor { background: #6f42c1; }
+        .tag.test { background: #fd7e14; }
+        .tag.chore { background: #6c757d; }
+
+        .commit-section {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .commit-header {
+            background: var(--light-color);
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .commit-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--dark-color);
+        }
+
+        .commit-title a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .commit-title a:hover {
+            color: var(--primary-color);
+        }
+
+        .commit-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: #586069;
+        }
+
+        .meta-icon {
+            font-size: 1rem;
+        }
+
+        .commit-hash {
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            background: var(--code-bg);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            user-select: all;
+        }
+
+        .commit-body {
+            padding: 1.5rem;
+        }
+
+        .commit-description {
+            background: var(--code-bg);
+            padding: 1rem;
+            border-radius: 6px;
+            border-left: 4px solid var(--primary-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .commit-description h4 {
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .commit-description ul {
+            margin-left: 1.5rem;
+        }
+
+        .commit-description li {
+            margin-bottom: 0.25rem;
+        }
+
+        .diff-container {
+            margin-top: 1.5rem;
+        }
+
+        .diff-file {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .diff-file-header {
+            background: var(--light-color);
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .diff-stats {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .diff-stat {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .diff-stat.additions { color: var(--success-color); }
+        .diff-stat.deletions { color: var(--danger-color); }
+
+        .diff-content {
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            overflow-x: auto;
+        }
+
+        .diff-line {
+            padding: 0.25rem 1rem;
+            white-space: pre;
+        }
+
+        .diff-line.context {
+            background: white;
+        }
+
+        .diff-line.addition {
+            background: var(--diff-add);
+            border-left: 3px solid var(--diff-add-border);
+        }
+
+        .diff-line.deletion {
+            background: var(--diff-del);
+            border-left: 3px solid var(--diff-del-border);
+        }
+
+        .diff-line.hunk {
+            background: #f1f8ff;
+            color: #0366d6;
+            font-weight: 600;
+        }
+
+        .overview {
+            background: var(--light-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .overview h2 {
+            color: var(--dark-color);
+            margin-bottom: 1rem;
+        }
+
+        .overview-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .overview-stat {
+            background: white;
+            padding: 1rem;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .overview-stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .overview-stat-label {
+            font-size: 0.9rem;
+            color: #586069;
+            margin-top: 0.25rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .commit-meta {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🚀 Commit Summary</h1>
+            <p>Generated commits for <strong>commit_summery</strong> repository on July 15, 2025</p>
+        </header>
+
+        <section class="status-grid">
+            <div class="status-card">
+                <h3>Operation Status</h3>
+                <div class="status-value status-success">✅ Success</div>
+            </div>
+            
+            <div class="status-card">
+                <h3>Push Status</h3>
+                <div class="status-value status-success">✅ Pushed</div>
+            </div>
+            
+            <div class="status-card">
+                <h3>Git Branch</h3>
+                <div class="status-value">🌿 main</div>
+            </div>
+            
+            <div class="status-card">
+                <h3>Remote Repository</h3>
+                <div class="status-value">
+                    <a href="https://github.com/sugiura-hiromiti/commit_summery" class="status-link" target="_blank">
+                        sugiura-hiromiti/commit_summery
+                    </a>
+                </div>
+            </div>
+            
+            <div class="status-card">
+                <h3>Repository Tags</h3>
+                <div class="tags">
+                    <span class="tag feat">dashboard</span>
+                    <span class="tag">debugging</span>
+                    <span class="tag">javascript</span>
+                    <span class="tag">html</span>
+                </div>
+            </div>
+        </section>
+
+        <main>
+            <div class="commit-section">
+                <div class="commit-header">
+                    <h2 class="commit-title">
+                        <a href="https://github.com/sugiura-hiromiti/commit_summery/commit/a6a560b98b9fb4fbc1ea8c1ca09f76f8a8329e33" target="_blank">
+                            feat: enhance dashboard debugging and error handling
+                        </a>
+                    </h2>
+                    
+                    <div class="commit-meta">
+                        <div class="meta-item">
+                            <span class="meta-icon">🔗</span>
+                            <span class="commit-hash" onclick="navigator.clipboard.writeText('a6a560b98b9fb4fbc1ea8c1ca09f76f8a8329e33')" title="Click to copy full hash">a6a560b</span>
+                        </div>
+                        
+                        <div class="meta-item">
+                            <span class="meta-icon">👤</span>
+                            <span>sugiura-hiromiti &lt;sugiura130418@icloud.com&gt;</span>
+                        </div>
+                        
+                        <div class="meta-item">
+                            <span class="meta-icon">📅</span>
+                            <span>Tue Jul 15 01:24:25 2025 +0900</span>
+                        </div>
+                        
+                        <div class="meta-item">
+                            <span class="meta-icon">📊</span>
+                            <span>1 file changed, 176 insertions(+), 34 deletions(-)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="commit-body">
+                    <div class="commit-description">
+                        <h4>📋 Changes</h4>
+                        <ul>
+                            <li>Add comprehensive debug information panel with URL, base URL, and summary count</li>
+                            <li>Implement robust error handling in dashboard initialization</li>
+                            <li>Add test render functionality for troubleshooting</li>
+                            <li>Improve error display with fallback content and debug options</li>
+                            <li>Add detailed console logging for better debugging experience</li>
+                            <li>Expose dashboard globally for debugging purposes</li>
+                        </ul>
+                        
+                        <h4>🔧 Technical Details</h4>
+                        <ul>
+                            <li>Added <code>debugInfo</code> section with toggle visibility</li>
+                            <li>Enhanced <code>init()</code> method with try-catch error handling</li>
+                            <li>Added <code>testRender()</code> method for manual testing</li>
+                            <li>Improved <code>renderCommitCards()</code> with better error handling</li>
+                            <li>Added fallback UI for initialization failures</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="diff-container">
+                        <div class="diff-file">
+                            <div class="diff-file-header">
+                                📄 index.html
+                                <div class="diff-stats">
+                                    <div class="diff-stat additions">
+                                        <span>+</span>
+                                        <span>176 additions</span>
+                                    </div>
+                                    <div class="diff-stat deletions">
+                                        <span>-</span>
+                                        <span>34 deletions</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="diff-content">
+<div class="diff-line hunk">@@ -848,6 +848,17 @@</div>
+<div class="diff-line context">                     &lt;div class="spinner"&gt;&lt;/div&gt;</div>
+<div class="diff-line context">                     &lt;span&gt;Loading commit summaries...&lt;/span&gt;</div>
+<div class="diff-line context">                 &lt;/div&gt;</div>
+<div class="diff-line addition">+                &lt;!-- Fallback content for debugging --&gt;</div>
+<div class="diff-line addition">+                &lt;div id="debugInfo" style="display: none; padding: 20px; font-size: 0.8rem; color: var(--text-secondary); border-top: 1px solid var(--border-color);"&gt;</div>
+<div class="diff-line addition">+                    &lt;div&gt;Debug Information:&lt;/div&gt;</div>
+<div class="diff-line addition">+                    &lt;div&gt;• Page URL: &lt;span id="debugUrl"&gt;&lt;/span&gt;&lt;/div&gt;</div>
+<div class="diff-line addition">+                    &lt;div&gt;• Base URL: &lt;span id="debugBaseUrl"&gt;&lt;/span&gt;&lt;/div&gt;</div>
+<div class="diff-line addition">+                    &lt;div&gt;• Summaries loaded: &lt;span id="debugCount"&gt;0&lt;/span&gt;&lt;/div&gt;</div>
+<div class="diff-line addition">+                    &lt;button onclick="window.dashboard && window.dashboard.testRender()" </div>
+<div class="diff-line addition">+                            style="margin-top: 8px; padding: 4px 8px; background: var(--accent-color); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75rem;"&gt;</div>
+<div class="diff-line addition">+                        Test Render</div>
+<div class="diff-line addition">+                    &lt;/button&gt;</div>
+<div class="diff-line addition">+                &lt;/div&gt;</div>
+<div class="diff-line context">             &lt;/div&gt;</div>
+<div class="diff-line context">         &lt;/aside&gt;</div>
+
+<div class="diff-line hunk">@@ -953,19 +964,85 @@</div>
+<div class="diff-line context">             }</div>
+<div class="diff-line context"> </div>
+<div class="diff-line context">             async init() {</div>
+<div class="diff-line deletion">-                this.setupTheme();</div>
+<div class="diff-line deletion">-                await this.loadCommitSummaries();</div>
+<div class="diff-line deletion">-                this.applyFilters();</div>
+<div class="diff-line deletion">-                this.renderCommitCards();</div>
+<div class="diff-line deletion">-                this.renderStatistics();</div>
+<div class="diff-line deletion">-                this.setupEventListeners();</div>
+<div class="diff-line addition">+                console.log('Initializing dashboard...');</div>
+<div class="diff-line addition">+                console.log('Current URL:', window.location.href);</div>
+<div class="diff-line addition">+                console.log('Base URL:', this.baseUrl);</div>
+<div class="diff-line context">                 </div>
+<div class="diff-line deletion">-                // Load first summary by default</div>
+<div class="diff-line deletion">-                if (this.filteredSummaries.length > 0) {</div>
+<div class="diff-line deletion">-                    this.loadSummaryInMainContent(this.filteredSummaries[0]);</div>
+<div class="diff-line addition">+                try {</div>
+<div class="diff-line addition">+                    this.setupTheme();</div>
+<div class="diff-line addition">+                    await this.loadCommitSummaries();</div>
+<div class="diff-line addition">+                    this.applyFilters();</div>
+<div class="diff-line addition">+                    </div>
+<div class="diff-line addition">+                    // Update debug info</div>
+<div class="diff-line addition">+                    this.updateDebugInfo();</div>
+<div class="diff-line addition">+                    </div>
+<div class="diff-line addition">+                    this.renderCommitCards();</div>
+<div class="diff-line addition">+                    this.renderStatistics();</div>
+<div class="diff-line addition">+                    this.setupEventListeners();</div>
+<div class="diff-line addition">+                    </div>
+<div class="diff-line addition">+                    // Load first summary by default</div>
+<div class="diff-line addition">+                    if (this.filteredSummaries.length > 0) {</div>
+<div class="diff-line addition">+                        this.loadSummaryInMainContent(this.filteredSummaries[0]);</div>
+<div class="diff-line addition">+                    }</div>
+<div class="diff-line addition">+                    </div>
+<div class="diff-line addition">+                    console.log('Dashboard initialized successfully');</div>
+<div class="diff-line addition">+                } catch (error) {</div>
+<div class="diff-line addition">+                    console.error('Failed to initialize dashboard:', error);</div>
+<div class="diff-line addition">+                    // Show error in sidebar</div>
+<div class="diff-line addition">+                    document.getElementById('commitCardsContainer').innerHTML = `</div>
+<div class="diff-line addition">+                        &lt;div style="padding: 20px; text-align: center; color: var(--error-color);"&gt;</div>
+<div class="diff-line addition">+                            &lt;div style="font-size: 2rem; margin-bottom: 12px;"&gt;⚠️&lt;/div&gt;</div>
+<div class="diff-line addition">+                            &lt;div&gt;Failed to load dashboard&lt;/div&gt;</div>
+<div class="diff-line addition">+                            &lt;div style="font-size: 0.8rem; margin-top: 8px;"&gt;Check console for details&lt;/div&gt;</div>
+<div class="diff-line addition">+                            &lt;button onclick="document.getElementById('debugInfo').style.display='block'" </div>
+<div class="diff-line addition">+                                    style="margin-top: 12px; padding: 6px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer;"&gt;</div>
+<div class="diff-line addition">+                                Show Debug Info</div>
+<div class="diff-line addition">+                            &lt;/button&gt;</div>
+<div class="diff-line addition">+                        &lt;/div&gt;</div>
+<div class="diff-line addition">+                    `;</div>
+<div class="diff-line context">                 }</div>
+<div class="diff-line context">             }</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="overview">
+            <h2>📊 Overview</h2>
+            <p>This commit enhances the dashboard with comprehensive debugging capabilities and robust error handling, making it easier to troubleshoot issues and maintain the application.</p>
+            
+            <div class="overview-stats">
+                <div class="overview-stat">
+                    <div class="overview-stat-value">1</div>
+                    <div class="overview-stat-label">Commits Generated</div>
+                </div>
+                
+                <div class="overview-stat">
+                    <div class="overview-stat-value">1</div>
+                    <div class="overview-stat-label">Files Modified</div>
+                </div>
+                
+                <div class="overview-stat">
+                    <div class="overview-stat-value">176</div>
+                    <div class="overview-stat-label">Lines Added</div>
+                </div>
+                
+                <div class="overview-stat">
+                    <div class="overview-stat-value">34</div>
+                    <div class="overview-stat-label">Lines Removed</div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Add click-to-copy functionality for commit hashes
+        document.querySelectorAll('.commit-hash').forEach(hash => {
+            hash.addEventListener('click', function() {
+                const fullHash = this.getAttribute('onclick').match(/'([^']+)'/)[1];
+                navigator.clipboard.writeText(fullHash).then(() => {
+                    const originalText = this.textContent;
+                    this.textContent = 'Copied!';
+                    this.style.background = '#28a745';
+                    this.style.color = 'white';
+                    
+                    setTimeout(() => {
+                        this.textContent = originalText;
+                        this.style.background = '';
+                        this.style.color = '';
+                    }, 1000);
+                });
+            });
+        });
+
+        // Add smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commit Summary - 2025-07-15 00:13:12</title>
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --border-color: #30363d;
+            --accent-color: #58a6ff;
+            --success-color: #3fb950;
+            --warning-color: #d29922;
+            --error-color: #f85149;
+            --hover-bg: #262c36;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .header h1 {
+            font-size: 1.75rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .meta-item {
+            background: rgba(255,255,255,0.1);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .meta-label {
+            font-size: 0.875rem;
+            opacity: 0.8;
+            margin-bottom: 4px;
+        }
+
+        .meta-value {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .status-tags {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .status-tag {
+            background: var(--success-color);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-tag.push { background: var(--success-color); }
+        .status-tag.operation { background: var(--accent-color); }
+        .status-tag.branch { background: var(--warning-color); }
+        .status-tag.repo { background: #8b5cf6; }
+
+        .section {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            background: var(--bg-tertiary);
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .section-content {
+            padding: 20px;
+        }
+
+        .commit-card {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .commit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .commit-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .commit-title a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .commit-title a:hover {
+            text-decoration: underline;
+        }
+
+        .commit-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .commit-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .commit-hash {
+            background: var(--bg-primary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.8125rem;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+
+        .commit-hash:hover {
+            background: var(--hover-bg);
+            border-color: var(--accent-color);
+        }
+
+        .commit-body {
+            background: var(--bg-primary);
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 16px;
+        }
+
+        .commit-body h3 {
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .commit-body ul {
+            padding-left: 20px;
+        }
+
+        .commit-body li {
+            margin-bottom: 4px;
+            color: var(--text-secondary);
+        }
+
+        .diff-container {
+            margin-top: 20px;
+        }
+
+        .file-diff {
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .file-header {
+            background: var(--bg-tertiary);
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-name {
+            font-family: monospace;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .file-stats {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .diff-content {
+            background: var(--bg-primary);
+            overflow-x: auto;
+        }
+
+        .diff-line {
+            display: flex;
+            font-family: monospace;
+            font-size: 0.8125rem;
+            line-height: 1.4;
+            border-bottom: 1px solid rgba(48, 54, 61, 0.3);
+        }
+
+        .line-number {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            padding: 4px 8px;
+            min-width: 60px;
+            text-align: right;
+            border-right: 1px solid var(--border-color);
+            user-select: none;
+        }
+
+        .line-content {
+            padding: 4px 12px;
+            flex: 1;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .diff-line.added {
+            background: rgba(63, 185, 80, 0.15);
+        }
+
+        .diff-line.added .line-content {
+            color: #3fb950;
+        }
+
+        .diff-line.removed {
+            background: rgba(248, 81, 73, 0.15);
+        }
+
+        .diff-line.removed .line-content {
+            color: #f85149;
+        }
+
+        .diff-line.context .line-content {
+            color: var(--text-secondary);
+        }
+
+        .overview {
+            background: var(--bg-tertiary);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .overview-item {
+            text-align: center;
+            padding: 16px;
+            background: var(--bg-primary);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .overview-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-bottom: 4px;
+        }
+
+        .overview-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .copy-btn {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.2s ease;
+        }
+
+        .copy-btn:hover {
+            background: var(--hover-bg);
+            border-color: var(--accent-color);
+        }
+
+        @media (max-width: 768px) {
+            .header-meta {
+                grid-template-columns: 1fr;
+            }
+            
+            .commit-meta {
+                grid-template-columns: 1fr;
+            }
+            
+            .overview-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <h1>
+                <span>📊</span>
+                Commit Summary - Multi-Repository Dashboard
+            </h1>
+            <p>Automated commit generation and HTML summary creation</p>
+            
+            <div class="header-meta">
+                <div class="meta-item">
+                    <div class="meta-label">Operation Status</div>
+                    <div class="meta-value">✅ Success</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Push Status</div>
+                    <div class="meta-value">✅ Pushed to Remote</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Git Branch</div>
+                    <div class="meta-value">main</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Remote Repository</div>
+                    <div class="meta-value">github.personal:sugiura-hiromiti/commit_summery</div>
+                </div>
+            </div>
+            
+            <div class="status-tags">
+                <span class="status-tag operation">Commit Generated</span>
+                <span class="status-tag push">Successfully Pushed</span>
+                <span class="status-tag branch">main</span>
+                <span class="status-tag repo">commit_summery</span>
+            </div>
+        </div>
+
+        <!-- Commits Section -->
+        <div class="section">
+            <div class="section-header">
+                <span>📝</span>
+                <span class="section-title">Generated Commits (Chronological Order)</span>
+            </div>
+            <div class="section-content">
+                <div class="commit-card">
+                    <div class="commit-header">
+                        <div>
+                            <div class="commit-title">
+                                <a href="https://github.com/sugiura-hiromiti/commit_summery/commit/a0c548f7b53446bee81ae572df6674a7a59ce027" target="_blank">
+                                    feat: add comprehensive multi-repository commit dashboard
+                                </a>
+                            </div>
+                        </div>
+                        <button class="copy-btn" onclick="copyToClipboard('a0c548f7b53446bee81ae572df6674a7a59ce027')">
+                            Copy Hash
+                        </button>
+                    </div>
+                    
+                    <div class="commit-meta">
+                        <div class="commit-meta-item">
+                            <span>🔗</span>
+                            <span class="commit-hash" onclick="copyToClipboard('a0c548f')">a0c548f</span>
+                        </div>
+                        <div class="commit-meta-item">
+                            <span>👤</span>
+                            <span>sugiura-hiromiti &lt;sugiura130418@icloud.com&gt;</span>
+                        </div>
+                        <div class="commit-meta-item">
+                            <span>📁</span>
+                            <span>1 file changed</span>
+                        </div>
+                        <div class="commit-meta-item">
+                            <span>➕</span>
+                            <span>2605 insertions</span>
+                        </div>
+                        <div class="commit-meta-item">
+                            <span>➖</span>
+                            <span>0 deletions</span>
+                        </div>
+                        <div class="commit-meta-item">
+                            <span>📅</span>
+                            <span>2025-07-15 00:13:12 +0900</span>
+                        </div>
+                    </div>
+                    
+                    <div class="commit-body">
+                        <h3>Commit Message Body:</h3>
+                        <ul>
+                            <li>Interactive dashboard for tracking commit summaries across repositories</li>
+                            <li>Real-time search with tag-based filtering system</li>
+                            <li>Calendar view with activity heatmap and streak tracking</li>
+                            <li>Repository breakdown with visual statistics</li>
+                            <li>Responsive design with dark/light theme support</li>
+                            <li>Enhanced navigation and commit detail views</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="diff-container">
+                        <h3 style="margin-bottom: 16px; color: var(--text-primary);">📋 File Changes</h3>
+                        
+                        <div class="file-diff">
+                            <div class="file-header">
+                                <span class="file-name">index.html</span>
+                                <span class="file-stats">+2605 lines (new file)</span>
+                            </div>
+                            <div class="diff-content">
+                                <div class="diff-line added">
+                                    <div class="line-number">1</div>
+                                    <div class="line-content">+<!DOCTYPE html></div>
+                                </div>
+                                <div class="diff-line added">
+                                    <div class="line-number">2</div>
+                                    <div class="line-content">+<html lang="en"></div>
+                                </div>
+                                <div class="diff-line added">
+                                    <div class="line-number">3</div>
+                                    <div class="line-content">+<head></div>
+                                </div>
+                                <div class="diff-line added">
+                                    <div class="line-number">4</div>
+                                    <div class="line-content">+    <meta charset="UTF-8"></div>
+                                </div>
+                                <div class="diff-line added">
+                                    <div class="line-number">5</div>
+                                    <div class="line-content">+    <meta name="viewport" content="width=device-width, initial-scale=1.0"></div>
+                                </div>
+                                <div class="diff-line added">
+                                    <div class="line-number">6</div>
+                                    <div class="line-content">+    <title>Commit Summary Dashboard - sugiura-hiromiti</title></div>
+                                </div>
+                                <div class="diff-line context">
+                                    <div class="line-number">...</div>
+                                    <div class="line-content">... (2599 more lines added)</div>
+                                </div>
+                                <div class="diff-line added">
+                                    <div class="line-number">2605</div>
+                                    <div class="line-content">+</html></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overview Section -->
+        <div class="section">
+            <div class="section-header">
+                <span>📈</span>
+                <span class="section-title">Summary Overview</span>
+            </div>
+            <div class="section-content">
+                <div class="overview">
+                    <div class="overview-grid">
+                        <div class="overview-item">
+                            <div class="overview-number">1</div>
+                            <div class="overview-label">Total Commits</div>
+                        </div>
+                        <div class="overview-item">
+                            <div class="overview-number">1</div>
+                            <div class="overview-label">Files Changed</div>
+                        </div>
+                        <div class="overview-item">
+                            <div class="overview-number">2605</div>
+                            <div class="overview-label">Lines Added</div>
+                        </div>
+                        <div class="overview-item">
+                            <div class="overview-number">0</div>
+                            <div class="overview-label">Lines Deleted</div>
+                        </div>
+                        <div class="overview-item">
+                            <div class="overview-number">1</div>
+                            <div class="overview-label">Repository</div>
+                        </div>
+                        <div class="overview-item">
+                            <div class="overview-number">✅</div>
+                            <div class="overview-label">Push Status</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                // Show temporary feedback
+                const button = event.target;
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                button.style.background = 'var(--success-color)';
+                button.style.color = 'white';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = '';
+                    button.style.color = '';
+                }, 1000);
+            }).catch(function(err) {
+                console.error('Could not copy text: ', err);
+                alert('Failed to copy to clipboard');
+            });
+        }
+
+        // Add click handlers for commit hashes
+        document.querySelectorAll('.commit-hash').forEach(hash => {
+            hash.addEventListener('click', function() {
+                copyToClipboard(this.textContent);
+                
+                // Visual feedback
+                this.style.background = 'var(--success-color)';
+                this.style.color = 'white';
+                
+                setTimeout(() => {
+                    this.style.background = '';
+                    this.style.color = '';
+                }, 1000);
+            });
+        });
+    </script>
+</body>
+</html>
