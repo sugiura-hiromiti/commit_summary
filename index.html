@@ -654,25 +654,103 @@
 
         .sort-option {
             display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 4px;
+            padding: 12px 15px;
             border: 1px solid #e9ecef;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s ease;
             font-size: 0.9rem;
+            background: white;
+            margin-bottom: 8px;
         }
 
         .sort-option:hover {
             border-color: #667eea;
             background: #f8f9fa;
+            transform: translateX(3px);
         }
 
         .sort-option.active {
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .sort-option.active span {
+            color: white !important;
+        }
+
+        .sort-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #667eea;
+            margin-left: auto;
+        }
+
+        .sort-label {
+            font-weight: 500;
+        }
+
+        .sort-value {
+            font-weight: 600;
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        .sort-dropdown {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .sort-dropdown:hover,
+        .sort-dropdown:focus {
+            border-color: #667eea;
+        }
+
+        .sort-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border: 1px solid #e9ecef;
+        }
+
+        .sort-status-label {
+            font-size: 0.85rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .sort-status-value {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
         }
 
         .mini-chart {
@@ -1683,11 +1761,32 @@
 
                 <div class="filter-group">
                     <label class="filter-label">Sort By</label>
+                    <div class="sort-status" id="sortStatus">
+                        <span class="sort-status-label">Current: </span>
+                        <span class="sort-status-value" id="sidebarSortValue">Newest First</span>
+                        <button class="test-sort-btn" id="testSortBtn" style="margin-left: 10px; padding: 2px 6px; font-size: 0.7rem; background: #667eea; color: white; border: none; border-radius: 3px; cursor: pointer;">Test</button>
+                    </div>
                     <div class="sort-options">
-                        <div class="sort-option active" data-sort="newest">📅 Newest First</div>
-                        <div class="sort-option" data-sort="oldest">📅 Oldest First</div>
-                        <div class="sort-option" data-sort="repo">📁 Repository Name</div>
-                        <div class="sort-option" data-sort="activity">⚡ Most Active</div>
+                        <div class="sort-option active" data-sort="newest">
+                            <span>📅 Newest First</span>
+                            <span style="font-size: 0.8rem; color: #666;">Latest commits first</span>
+                        </div>
+                        <div class="sort-option" data-sort="oldest">
+                            <span>📅 Oldest First</span>
+                            <span style="font-size: 0.8rem; color: #666;">Earliest commits first</span>
+                        </div>
+                        <div class="sort-option" data-sort="repo">
+                            <span>📁 Repository Name</span>
+                            <span style="font-size: 0.8rem; color: #666;">Alphabetical by repo</span>
+                        </div>
+                        <div class="sort-option" data-sort="activity">
+                            <span>⚡ Most Active</span>
+                            <span style="font-size: 0.8rem; color: #666;">By repository activity</span>
+                        </div>
+                        <div class="sort-option" data-sort="alphabetical">
+                            <span>🔤 Alphabetical</span>
+                            <span style="font-size: 0.8rem; color: #666;">Repo name + date</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1917,6 +2016,10 @@
                         <span>Search query help</span>
                         <span class="help-key" id="searchHelpKey">⌘/</span>
                     </div>
+                    <div class="help-item">
+                        <span>Cycle sort options</span>
+                        <span class="help-key" id="cycleSortKey">⌘R</span>
+                    </div>
                 </div>
                 
                 <div class="help-category">
@@ -2092,6 +2195,19 @@
                 <button class="filter-btn" data-filter="oso">oso</button>
                 <button class="filter-btn" data-filter=".config">.config</button>
                 <button class="filter-btn" data-filter="recent">Recent (7 days)</button>
+                
+                <!-- Sort Indicator -->
+                <div class="sort-indicator" id="sortIndicator">
+                    <span class="sort-label">📊 Sorted by:</span>
+                    <span class="sort-value" id="sortValue">Newest First</span>
+                    <select class="sort-dropdown" id="sortDropdown">
+                        <option value="newest">📅 Newest First</option>
+                        <option value="oldest">📅 Oldest First</option>
+                        <option value="repo">📁 Repository Name</option>
+                        <option value="activity">⚡ Most Active</option>
+                        <option value="alphabetical">🔤 Alphabetical</option>
+                    </select>
+                </div>
             </div>
         </div>
 
@@ -2173,6 +2289,7 @@
                 this.renderSidebar();
                 this.renderTags();
                 this.renderCalendar();
+                this.updateSortIndicator();
             }
 
             async loadSummaries() {
@@ -3116,12 +3233,38 @@
                 // Sort options
                 document.querySelectorAll('.sort-option').forEach(option => {
                     option.addEventListener('click', (e) => {
+                        console.log('Sort option clicked:', e.target.dataset.sort);
+                        
+                        // Remove active class from all options
                         document.querySelectorAll('.sort-option').forEach(o => o.classList.remove('active'));
+                        
+                        // Add active class to clicked option
                         e.target.classList.add('active');
+                        
+                        // Update current sort
                         this.currentSort = e.target.dataset.sort;
+                        console.log('Current sort set to:', this.currentSort);
+                        
+                        // Apply sorting
                         this.applySorting();
+                        
+                        // Re-render summaries with new sort
                         this.filterSummaries();
+                        
+                        // Update UI indicators
+                        this.updateSortIndicator();
+                        
+                        // Show success message
+                        this.showSuccess(`Sorted by ${this.getSortLabel(this.currentSort)}`);
                     });
+                });
+
+                // Sort dropdown
+                document.getElementById('sortDropdown').addEventListener('change', (e) => {
+                    this.currentSort = e.target.value;
+                    this.applySorting();
+                    this.filterSummaries();
+                    this.updateSortButtons();
                 });
 
                 // Save current search
@@ -3178,6 +3321,11 @@
 
                 // Update keyboard shortcuts based on platform
                 this.updateKeyboardShortcutsDisplay();
+
+                // Test sort button (temporary)
+                document.getElementById('testSortBtn').addEventListener('click', () => {
+                    this.cycleSortOptions();
+                });
             }
 
             handleKeyboardShortcuts(e) {
@@ -3255,6 +3403,12 @@
                     this.toggleSearchQueryHelp();
                 }
                 
+                // Cmd/Ctrl + R: Cycle through sort options (for testing)
+                if (cmdKey && e.key === 'r') {
+                    e.preventDefault();
+                    this.cycleSortOptions();
+                }
+                
                 // Arrow keys for calendar navigation when calendar is focused
                 if (document.activeElement && document.activeElement.closest('.calendar-views')) {
                     if (e.key === 'ArrowLeft') {
@@ -3308,6 +3462,7 @@
                     document.getElementById('focusSearchKey').textContent = '⌘K';
                     document.getElementById('saveSearchKey').textContent = '⌘S';
                     document.getElementById('searchHelpKey').textContent = '⌘/';
+                    document.getElementById('cycleSortKey').textContent = '⌘R';
                     document.getElementById('filter1Key').textContent = '⌘1';
                     document.getElementById('filter2Key').textContent = '⌘2';
                     document.getElementById('filter3Key').textContent = '⌘3';
@@ -3327,6 +3482,7 @@
                     document.getElementById('focusSearchKey').textContent = 'Ctrl+K';
                     document.getElementById('saveSearchKey').textContent = 'Ctrl+S';
                     document.getElementById('searchHelpKey').textContent = 'Ctrl+/';
+                    document.getElementById('cycleSortKey').textContent = 'Ctrl+R';
                     document.getElementById('filter1Key').textContent = 'Ctrl+1';
                     document.getElementById('filter2Key').textContent = 'Ctrl+2';
                     document.getElementById('filter3Key').textContent = 'Ctrl+3';
@@ -3708,24 +3864,119 @@
             }
 
             applySorting() {
+                const sortFunction = this.getSortFunction();
+                this.summaries.sort(sortFunction);
+                
+                // Also sort filtered summaries if they exist
+                if (this.filteredSummaries && this.filteredSummaries.length > 0) {
+                    this.filteredSummaries.sort(sortFunction);
+                }
+                
+                // Show visual feedback
+                this.showSortFeedback();
+            }
+
+            showSortFeedback() {
+                const sortIndicator = document.getElementById('sortIndicator');
+                const sortStatus = document.getElementById('sortStatus');
+                
+                // Animate main sort indicator
+                if (sortIndicator) {
+                    sortIndicator.style.transform = 'scale(1.05)';
+                    sortIndicator.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.3)';
+                    
+                    setTimeout(() => {
+                        sortIndicator.style.transform = 'scale(1)';
+                        sortIndicator.style.boxShadow = 'none';
+                    }, 300);
+                }
+                
+                // Animate sidebar sort status
+                if (sortStatus) {
+                    sortStatus.style.background = 'rgba(102, 126, 234, 0.2)';
+                    sortStatus.style.borderColor = '#667eea';
+                    
+                    setTimeout(() => {
+                        sortStatus.style.background = '#f8f9fa';
+                        sortStatus.style.borderColor = '#e9ecef';
+                    }, 500);
+                }
+                
+                console.log(`Sort applied: ${this.currentSort}, Total summaries: ${this.summaries.length}, Filtered: ${this.filteredSummaries.length}`);
+            }
+
+            getSortFunction() {
                 switch (this.currentSort) {
                     case 'newest':
-                        this.summaries.sort((a, b) => b.timestamp - a.timestamp);
-                        break;
+                        return (a, b) => b.timestamp - a.timestamp;
+                    
                     case 'oldest':
-                        this.summaries.sort((a, b) => a.timestamp - b.timestamp);
-                        break;
+                        return (a, b) => a.timestamp - b.timestamp;
+                    
                     case 'repo':
-                        this.summaries.sort((a, b) => a.repoName.localeCompare(b.repoName));
-                        break;
+                        return (a, b) => a.repoName.localeCompare(b.repoName);
+                    
                     case 'activity':
+                        // Calculate repository activity counts
                         const repoCounts = {};
                         this.summaries.forEach(s => {
                             repoCounts[s.repoName] = (repoCounts[s.repoName] || 0) + 1;
                         });
-                        this.summaries.sort((a, b) => repoCounts[b.repoName] - repoCounts[a.repoName]);
-                        break;
+                        return (a, b) => {
+                            const countA = repoCounts[a.repoName] || 0;
+                            const countB = repoCounts[b.repoName] || 0;
+                            if (countA !== countB) {
+                                return countB - countA; // Most active first
+                            }
+                            // If same activity, sort by newest
+                            return b.timestamp - a.timestamp;
+                        };
+                    
+                    case 'alphabetical':
+                        return (a, b) => {
+                            const repoCompare = a.repoName.localeCompare(b.repoName);
+                            if (repoCompare !== 0) return repoCompare;
+                            return b.timestamp - a.timestamp; // Newest first within same repo
+                        };
+                    
+                    case 'size':
+                        // Sort by estimated content size (filename length as proxy)
+                        return (a, b) => {
+                            const sizeA = a.filename.length;
+                            const sizeB = b.filename.length;
+                            if (sizeA !== sizeB) return sizeB - sizeA;
+                            return b.timestamp - a.timestamp;
+                        };
+                    
+                    default:
+                        return (a, b) => b.timestamp - a.timestamp; // Default to newest
                 }
+            }
+
+            getSortLabel(sortType) {
+                const sortLabels = {
+                    'newest': 'Newest First',
+                    'oldest': 'Oldest First', 
+                    'repo': 'Repository Name',
+                    'activity': 'Most Active',
+                    'alphabetical': 'Alphabetical',
+                    'size': 'By Size'
+                };
+                return sortLabels[sortType] || 'Newest First';
+            }
+
+            cycleSortOptions() {
+                const sortOptions = ['newest', 'oldest', 'repo', 'activity', 'alphabetical'];
+                const currentIndex = sortOptions.indexOf(this.currentSort);
+                const nextIndex = (currentIndex + 1) % sortOptions.length;
+                
+                this.currentSort = sortOptions[nextIndex];
+                this.applySorting();
+                this.filterSummaries();
+                this.updateSortButtons();
+                
+                this.showSuccess(`Sorted by ${this.getSortLabel(this.currentSort)}`);
+                console.log('Sort cycled to:', this.currentSort);
             }
 
             renderTags() {
@@ -3894,6 +4145,12 @@
 
                     return matchesSearch && matchesFilter && matchesDateRange && matchesRepoSelect && matchesTags;
                 });
+
+                // Apply current sorting to filtered results
+                if (this.filteredSummaries.length > 0) {
+                    const sortFunction = this.getSortFunction();
+                    this.filteredSummaries.sort(sortFunction);
+                }
 
                 this.renderSummaries();
                 this.updateSidebarHighlights();
@@ -4131,6 +4388,36 @@
                 document.querySelectorAll('.sort-option').forEach(btn => {
                     btn.classList.toggle('active', btn.dataset.sort === this.currentSort);
                 });
+                this.updateSortIndicator();
+            }
+
+            updateSortIndicator() {
+                const sortValue = document.getElementById('sortValue');
+                const sortDropdown = document.getElementById('sortDropdown');
+                const sidebarSortValue = document.getElementById('sidebarSortValue');
+                
+                const sortLabels = {
+                    'newest': '📅 Newest First',
+                    'oldest': '📅 Oldest First', 
+                    'repo': '📁 Repository Name',
+                    'activity': '⚡ Most Active',
+                    'alphabetical': '🔤 Alphabetical',
+                    'size': '📏 By Size'
+                };
+                
+                const currentLabel = sortLabels[this.currentSort] || 'Newest First';
+                
+                if (sortValue) {
+                    sortValue.textContent = currentLabel;
+                }
+                
+                if (sortDropdown) {
+                    sortDropdown.value = this.currentSort;
+                }
+                
+                if (sidebarSortValue) {
+                    sidebarSortValue.textContent = currentLabel;
+                }
             }
 
             updateRepoCheckboxes() {
@@ -4192,12 +4479,6 @@
             updateFilterButtons() {
                 document.querySelectorAll('.filter-btn').forEach(btn => {
                     btn.classList.toggle('active', btn.dataset.filter === this.currentFilter);
-                });
-            }
-
-            updateSortButtons() {
-                document.querySelectorAll('.sort-option').forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.sort === this.currentSort);
                 });
             }
 
