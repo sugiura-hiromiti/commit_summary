@@ -848,6 +848,17 @@
                     <div class="spinner"></div>
                     <span>Loading commit summaries...</span>
                 </div>
+                <!-- Fallback content for debugging -->
+                <div id="debugInfo" style="display: none; padding: 20px; font-size: 0.8rem; color: var(--text-secondary); border-top: 1px solid var(--border-color);">
+                    <div>Debug Information:</div>
+                    <div>• Page URL: <span id="debugUrl"></span></div>
+                    <div>• Base URL: <span id="debugBaseUrl"></span></div>
+                    <div>• Summaries loaded: <span id="debugCount">0</span></div>
+                    <button onclick="window.dashboard && window.dashboard.testRender()" 
+                            style="margin-top: 8px; padding: 4px 8px; background: var(--accent-color); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">
+                        Test Render
+                    </button>
+                </div>
             </div>
         </aside>
 
@@ -953,17 +964,83 @@
             }
 
             async init() {
-                this.setupTheme();
-                await this.loadCommitSummaries();
-                this.applyFilters();
-                this.renderCommitCards();
-                this.renderStatistics();
-                this.setupEventListeners();
+                console.log('Initializing dashboard...');
+                console.log('Current URL:', window.location.href);
+                console.log('Base URL:', this.baseUrl);
                 
-                // Load first summary by default
-                if (this.filteredSummaries.length > 0) {
-                    this.loadSummaryInMainContent(this.filteredSummaries[0]);
+                try {
+                    this.setupTheme();
+                    await this.loadCommitSummaries();
+                    this.applyFilters();
+                    
+                    // Update debug info
+                    this.updateDebugInfo();
+                    
+                    this.renderCommitCards();
+                    this.renderStatistics();
+                    this.setupEventListeners();
+                    
+                    // Load first summary by default
+                    if (this.filteredSummaries.length > 0) {
+                        this.loadSummaryInMainContent(this.filteredSummaries[0]);
+                    }
+                    
+                    console.log('Dashboard initialized successfully');
+                } catch (error) {
+                    console.error('Failed to initialize dashboard:', error);
+                    // Show error in sidebar
+                    document.getElementById('commitCardsContainer').innerHTML = `
+                        <div style="padding: 20px; text-align: center; color: var(--error-color);">
+                            <div style="font-size: 2rem; margin-bottom: 12px;">⚠️</div>
+                            <div>Failed to load dashboard</div>
+                            <div style="font-size: 0.8rem; margin-top: 8px;">Check console for details</div>
+                            <button onclick="document.getElementById('debugInfo').style.display='block'" 
+                                    style="margin-top: 12px; padding: 6px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer;">
+                                Show Debug Info
+                            </button>
+                        </div>
+                    `;
                 }
+            }
+
+            testRender() {
+                console.log('Testing render...');
+                const container = document.getElementById('commitCardsContainer');
+                
+                container.innerHTML = `
+                    <div style="padding: 20px;">
+                        <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; margin-bottom: 12px;">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                                <div style="font-size: 1.2rem;">✨</div>
+                                <div>
+                                    <div style="font-weight: 600; margin-bottom: 4px;">Test Commit Summary</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-secondary);">⚙️ .config • abc1234</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 4px;">
+                                <div style="background: var(--success-color); color: white; border-radius: 6px; padding: 2px 6px; font-size: 0.65rem;">feat</div>
+                                <div style="background: var(--config-color); color: white; border-radius: 6px; padding: 2px 6px; font-size: 0.65rem;">config</div>
+                            </div>
+                        </div>
+                        <div style="text-align: center; color: var(--text-secondary); font-size: 0.8rem;">
+                            Test card rendered successfully!<br>
+                            <button onclick="window.dashboard.renderCommitCards()" 
+                                    style="margin-top: 8px; padding: 4px 8px; background: var(--accent-color); color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                Load Real Cards
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            updateDebugInfo() {
+                const debugUrl = document.getElementById('debugUrl');
+                const debugBaseUrl = document.getElementById('debugBaseUrl');
+                const debugCount = document.getElementById('debugCount');
+                
+                if (debugUrl) debugUrl.textContent = window.location.href;
+                if (debugBaseUrl) debugBaseUrl.textContent = this.baseUrl;
+                if (debugCount) debugCount.textContent = this.allSummaries.length;
             }
 
             setupTheme() {
@@ -984,7 +1061,7 @@
 
             async loadCommitSummaries() {
                 try {
-                    // Known commit summary files with their metadata
+                    // Simplified data loading - no async file checking needed for GitHub Pages
                     const summaryData = [
                         {
                             path: '.config/2025/07/14/2025-07-14_21-28-43.html',
@@ -1026,7 +1103,6 @@
                             type: 'feat',
                             tags: ['rust', 'algorithm', 'performance']
                         },
-                        // Add more sample data to reach 10 items
                         {
                             path: '.config/2025/07/13/2025-07-13_15-30-22.html',
                             repository: '.config',
@@ -1069,6 +1145,7 @@
                         }
                     ];
 
+                    // Create summary objects immediately without async operations
                     this.allSummaries = summaryData.map(data => ({
                         id: this.generateId(data.path),
                         filename: data.path.split('/').pop(),
@@ -1086,8 +1163,11 @@
                         typeIcon: this.getCommitTypeIcon(data.type)
                     })).sort((a, b) => b.date - a.date);
 
+                    console.log('Loaded summaries:', this.allSummaries.length);
+
                 } catch (error) {
                     console.error('Error loading commit summaries:', error);
+                    // Fallback to empty array but still show the UI
                     this.allSummaries = [];
                 }
             }
@@ -1128,13 +1208,23 @@
             }
 
             renderCommitCards() {
+                console.log('Rendering commit cards...', this.filteredSummaries.length);
+                
                 const container = document.getElementById('commitCardsContainer');
+                
+                if (!container) {
+                    console.error('commitCardsContainer element not found');
+                    return;
+                }
                 
                 if (this.filteredSummaries.length === 0) {
                     container.innerHTML = `
                         <div class="no-results">
                             <div class="no-results-icon">🔍</div>
                             <div>No commit summaries found</div>
+                            <div style="font-size: 0.8rem; margin-top: 8px; color: var(--text-secondary);">
+                                Total summaries loaded: ${this.allSummaries.length}
+                            </div>
                         </div>
                     `;
                     return;
@@ -1142,31 +1232,53 @@
 
                 // Show only first 10 summaries
                 const summariesToShow = this.filteredSummaries.slice(0, 10);
+                console.log('Showing summaries:', summariesToShow.length);
                 
-                const html = summariesToShow.map(summary => `
-                    <a href="${summary.fullUrl}" class="commit-card" data-summary-id="${summary.id}" target="_blank">
-                        <div class="card-time">${this.formatRelativeTime(summary.date)}</div>
-                        <div class="card-header">
-                            <div class="card-icon">${summary.typeIcon}</div>
-                            <div class="card-content">
-                                <div class="card-title">${summary.title}</div>
-                                <div class="card-repo">
-                                    <span>${summary.repoIcon}</span>
-                                    <span>${summary.repository}</span>
-                                    <span>•</span>
-                                    <span>${summary.commitHash}</span>
+                try {
+                    const html = summariesToShow.map(summary => {
+                        const relativeTime = this.formatRelativeTime(summary.date);
+                        const formattedDate = this.formatDate(summary.date);
+                        const tagBadges = summary.tags.map(tag => 
+                            `<div class="card-badge ${this.getTagBadgeClass(tag)}">${tag}</div>`
+                        ).join('');
+                        
+                        return `
+                            <a href="${summary.fullUrl}" class="commit-card" data-summary-id="${summary.id}" target="_blank">
+                                <div class="card-time">${relativeTime}</div>
+                                <div class="card-header">
+                                    <div class="card-icon">${summary.typeIcon}</div>
+                                    <div class="card-content">
+                                        <div class="card-title">${summary.title}</div>
+                                        <div class="card-repo">
+                                            <span>${summary.repoIcon}</span>
+                                            <span>${summary.repository}</span>
+                                            <span>•</span>
+                                            <span>${summary.commitHash}</span>
+                                        </div>
+                                        <div class="card-meta">${formattedDate}</div>
+                                    </div>
                                 </div>
-                                <div class="card-meta">${this.formatDate(summary.date)}</div>
-                            </div>
+                                <div class="card-badges">
+                                    <div class="card-badge ${summary.type}">${summary.type}</div>
+                                    ${tagBadges}
+                                </div>
+                            </a>
+                        `;
+                    }).join('');
+                    
+                    container.innerHTML = html;
+                    console.log('Cards rendered successfully');
+                    
+                } catch (error) {
+                    console.error('Error rendering cards:', error);
+                    container.innerHTML = `
+                        <div style="padding: 20px; text-align: center; color: var(--error-color);">
+                            <div style="font-size: 2rem; margin-bottom: 12px;">❌</div>
+                            <div>Error rendering cards</div>
+                            <div style="font-size: 0.8rem; margin-top: 8px;">${error.message}</div>
                         </div>
-                        <div class="card-badges">
-                            <div class="card-badge ${summary.type}">${summary.type}</div>
-                            ${summary.tags.map(tag => `<div class="card-badge ${this.getTagBadgeClass(tag)}">${tag}</div>`).join('')}
-                        </div>
-                    </a>
-                `).join('');
-                
-                container.innerHTML = html;
+                    `;
+                }
             }
 
             getTagBadgeClass(tag) {
@@ -1490,7 +1602,37 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            new GitHubPagesCommitDashboard();
+            console.log('DOM loaded, initializing dashboard...');
+            
+            // Add a small delay to ensure all elements are ready
+            setTimeout(() => {
+                try {
+                    const dashboard = new GitHubPagesCommitDashboard();
+                    // Expose globally for debugging
+                    window.dashboard = dashboard;
+                    console.log('Dashboard exposed globally as window.dashboard');
+                } catch (error) {
+                    console.error('Failed to create dashboard:', error);
+                    
+                    // Show fallback content
+                    const container = document.getElementById('commitCardsContainer');
+                    if (container) {
+                        container.innerHTML = `
+                            <div style="padding: 20px; text-align: center;">
+                                <div style="font-size: 2rem; margin-bottom: 12px;">⚠️</div>
+                                <div style="color: var(--error-color); margin-bottom: 8px;">Dashboard failed to load</div>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px;">
+                                    Please refresh the page or check the console for errors.
+                                </div>
+                                <button onclick="document.getElementById('debugInfo').style.display='block'" 
+                                        style="padding: 6px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer;">
+                                    Show Debug Info
+                                </button>
+                            </div>
+                        `;
+                    }
+                }
+            }, 100);
         });
     </script>
 </body>
