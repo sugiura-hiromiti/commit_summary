@@ -38,10 +38,28 @@
             transform: translateX(-100%);
         }
 
-        .sidebar-toggle {
+        .right-sidebar {
+            width: 350px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            height: 100vh;
+            overflow-y: auto;
+            position: fixed;
+            right: 0;
+            top: 0;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .right-sidebar.collapsed {
+            transform: translateX(100%);
+        }
+
+        .calendar-toggle {
             position: fixed;
             top: 20px;
-            left: 20px;
+            right: 20px;
             z-index: 1001;
             background: rgba(255, 255, 255, 0.9);
             border: none;
@@ -57,7 +75,7 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
-        .sidebar-toggle:hover {
+        .calendar-toggle:hover {
             background: white;
             transform: scale(1.1);
         }
@@ -65,11 +83,329 @@
         .main-content {
             flex: 1;
             margin-left: 320px;
-            transition: margin-left 0.3s ease;
+            margin-right: 350px;
+            transition: all 0.3s ease;
         }
 
-        .main-content.expanded {
+        .main-content.left-expanded {
             margin-left: 0;
+        }
+
+        .main-content.right-expanded {
+            margin-right: 0;
+        }
+
+        .main-content.both-expanded {
+            margin-left: 0;
+            margin-right: 0;
+        }
+
+        .calendar-section {
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .calendar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .calendar-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .calendar-nav {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            background: none;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #666;
+        }
+
+        .nav-btn:hover {
+            background: #f8f9fa;
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            margin-bottom: 20px;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #666;
+            padding: 8px 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            border: 2px solid transparent;
+        }
+
+        .calendar-day:hover {
+            transform: scale(1.1);
+            z-index: 10;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .calendar-day.other-month {
+            color: #ccc;
+            background: #f8f9fa;
+        }
+
+        .calendar-day.today {
+            border-color: #667eea;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .calendar-day.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: bold;
+        }
+
+        .calendar-day.has-commits {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .calendar-day.high-activity {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .calendar-day.medium-activity {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+            color: white;
+        }
+
+        .calendar-day.low-activity {
+            background: rgba(102, 126, 234, 0.3);
+            color: #667eea;
+        }
+
+        .activity-indicator {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #667eea;
+        }
+
+        .activity-indicator.multiple {
+            background: linear-gradient(45deg, #667eea 0%, #28a745 50%, #fd7e14 100%);
+        }
+
+        .calendar-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 2px;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .calendar-legend {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        .calendar-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            max-width: 200px;
+        }
+
+        .calendar-tooltip.show {
+            opacity: 1;
+        }
+
+        .streak-indicator {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            min-width: 16px;
+            text-align: center;
+        }
+
+        .calendar-heatmap {
+            margin-bottom: 20px;
+        }
+
+        .heatmap-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(53, 1fr);
+            gap: 2px;
+        }
+
+        .heatmap-cell {
+            aspect-ratio: 1;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .heatmap-cell:hover {
+            transform: scale(1.2);
+            z-index: 10;
+        }
+
+        .heatmap-cell.level-0 { background: #ebedf0; }
+        .heatmap-cell.level-1 { background: #c6e48b; }
+        .heatmap-cell.level-2 { background: #7bc96f; }
+        .heatmap-cell.level-3 { background: #239a3b; }
+        .heatmap-cell.level-4 { background: #196127; }
+
+        .repo-distribution {
+            margin-bottom: 20px;
+        }
+
+        .repo-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .repo-bar:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .repo-bar-fill {
+            height: 4px;
+            border-radius: 2px;
+            margin-top: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .calendar-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .action-button {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #e9ecef;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .action-button:hover {
+            background: #f8f9fa;
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .action-button.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
         }
 
         .container {
@@ -894,6 +1230,7 @@
 </head>
 <body>
     <button class="sidebar-toggle" id="sidebarToggle">☰</button>
+    <button class="calendar-toggle" id="calendarToggle">📅</button>
     
     <aside class="sidebar" id="sidebar">
         <!-- Repository Navigator -->
@@ -992,6 +1329,129 @@
         </div>
     </aside>
 
+    <aside class="right-sidebar" id="rightSidebar">
+        <!-- Calendar Header -->
+        <div class="calendar-section">
+            <div class="calendar-header">
+                <h3 class="calendar-title">
+                    📅 Activity Calendar
+                </h3>
+                <div class="calendar-nav">
+                    <button class="nav-btn" id="prevMonth">‹</button>
+                    <span id="currentMonth">July 2025</span>
+                    <button class="nav-btn" id="nextMonth">›</button>
+                </div>
+            </div>
+
+            <!-- Calendar Stats -->
+            <div class="calendar-stats">
+                <div class="stat-item">
+                    <div class="stat-number" id="monthCommits">-</div>
+                    <div class="stat-label">This Month</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="currentStreak">-</div>
+                    <div class="stat-label">Current Streak</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="longestStreak">-</div>
+                    <div class="stat-label">Longest Streak</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="activeDays">-</div>
+                    <div class="stat-label">Active Days</div>
+                </div>
+            </div>
+
+            <!-- Calendar Legend -->
+            <div class="calendar-legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ebedf0;"></div>
+                    <span>No activity</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                    <span>High activity</span>
+                </div>
+            </div>
+
+            <!-- Main Calendar Grid -->
+            <div class="calendar-grid" id="calendarGrid">
+                <!-- Calendar days populated by JavaScript -->
+            </div>
+
+            <!-- Calendar Actions -->
+            <div class="calendar-actions">
+                <button class="action-button active" id="monthView">Month</button>
+                <button class="action-button" id="heatmapView">Heatmap</button>
+                <button class="action-button" id="todayBtn">Today</button>
+            </div>
+        </div>
+
+        <!-- Year Heatmap -->
+        <div class="calendar-section" id="heatmapSection" style="display: none;">
+            <div class="calendar-heatmap">
+                <div class="heatmap-title">Year Activity Heatmap</div>
+                <div class="heatmap-grid" id="heatmapGrid">
+                    <!-- Heatmap cells populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Repository Distribution -->
+        <div class="calendar-section">
+            <h3 class="sidebar-title">
+                📊 Repository Activity
+            </h3>
+            <div class="repo-distribution" id="repoDistribution">
+                <!-- Repository bars populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Activity Patterns -->
+        <div class="calendar-section">
+            <h3 class="sidebar-title">
+                📈 Activity Patterns
+            </h3>
+            <div class="analytics-grid">
+                <div class="analytics-item">
+                    <div class="analytics-number" id="weekdayAvg">-</div>
+                    <div class="analytics-label">Weekday Avg</div>
+                </div>
+                <div class="analytics-item">
+                    <div class="analytics-number" id="weekendAvg">-</div>
+                    <div class="analytics-label">Weekend Avg</div>
+                </div>
+                <div class="analytics-item">
+                    <div class="analytics-number" id="peakHour">-</div>
+                    <div class="analytics-label">Peak Hour</div>
+                </div>
+                <div class="analytics-item">
+                    <div class="analytics-number" id="mostActiveDay">-</div>
+                    <div class="analytics-label">Best Day</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Date Filters -->
+        <div class="calendar-section">
+            <h3 class="sidebar-title">
+                ⚡ Quick Filters
+            </h3>
+            <div class="calendar-actions">
+                <button class="action-button" id="filterToday">Today</button>
+                <button class="action-button" id="filterWeek">This Week</button>
+            </div>
+            <div class="calendar-actions" style="margin-top: 8px;">
+                <button class="action-button" id="filterMonth">This Month</button>
+                <button class="action-button" id="filterYear">This Year</button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Calendar Tooltip -->
+    <div class="calendar-tooltip" id="calendarTooltip"></div>
+
     <main class="main-content" id="mainContent">
         <div class="container">
             <header class="header">
@@ -1079,17 +1539,26 @@
                 this.allTags = new Set();
                 this.searchSuggestions = [];
                 
+                // Calendar properties
+                this.currentCalendarDate = new Date();
+                this.selectedDates = new Set();
+                this.calendarView = 'month'; // 'month' or 'heatmap'
+                this.activityData = new Map();
+                this.streakData = { current: 0, longest: 0 };
+                
                 this.init();
             }
 
             async init() {
                 await this.loadSummaries();
                 this.generateTags();
+                this.generateActivityData();
                 this.setupEventListeners();
                 this.updateStats();
                 this.renderSummaries();
                 this.renderSidebar();
                 this.renderTags();
+                this.renderCalendar();
             }
 
             async loadSummaries() {
@@ -1192,7 +1661,531 @@
                 return tags;
             }
 
-            generateTags() {
+            generateActivityData() {
+                this.activityData.clear();
+                
+                // Process each summary to build activity data
+                this.summaries.forEach(summary => {
+                    const dateKey = summary.timestamp.toDateString();
+                    
+                    if (!this.activityData.has(dateKey)) {
+                        this.activityData.set(dateKey, {
+                            date: summary.timestamp,
+                            count: 0,
+                            repos: new Set(),
+                            summaries: []
+                        });
+                    }
+                    
+                    const dayData = this.activityData.get(dateKey);
+                    dayData.count++;
+                    dayData.repos.add(summary.repoName);
+                    dayData.summaries.push(summary);
+                });
+                
+                // Calculate streaks
+                this.calculateStreaks();
+            }
+
+            calculateStreaks() {
+                const sortedDates = Array.from(this.activityData.keys())
+                    .map(dateKey => new Date(dateKey))
+                    .sort((a, b) => a - b);
+                
+                let currentStreak = 0;
+                let longestStreak = 0;
+                let tempStreak = 0;
+                
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                // Calculate current streak (working backwards from today)
+                let checkDate = new Date(today);
+                while (true) {
+                    const dateKey = checkDate.toDateString();
+                    if (this.activityData.has(dateKey)) {
+                        currentStreak++;
+                        checkDate.setDate(checkDate.getDate() - 1);
+                    } else {
+                        break;
+                    }
+                }
+                
+                // Calculate longest streak
+                for (let i = 0; i < sortedDates.length; i++) {
+                    if (i === 0) {
+                        tempStreak = 1;
+                    } else {
+                        const prevDate = sortedDates[i - 1];
+                        const currDate = sortedDates[i];
+                        const dayDiff = (currDate - prevDate) / (1000 * 60 * 60 * 24);
+                        
+                        if (dayDiff === 1) {
+                            tempStreak++;
+                        } else {
+                            longestStreak = Math.max(longestStreak, tempStreak);
+                            tempStreak = 1;
+                        }
+                    }
+                }
+                longestStreak = Math.max(longestStreak, tempStreak);
+                
+                this.streakData = { current: currentStreak, longest: longestStreak };
+            }
+
+            renderCalendar() {
+                this.renderCalendarGrid();
+                this.renderCalendarStats();
+                this.renderRepoDistribution();
+                this.renderActivityPatterns();
+                this.updateCalendarHeader();
+            }
+
+            updateCalendarHeader() {
+                const monthNames = [
+                    'January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'
+                ];
+                
+                const monthYear = `${monthNames[this.currentCalendarDate.getMonth()]} ${this.currentCalendarDate.getFullYear()}`;
+                document.getElementById('currentMonth').textContent = monthYear;
+            }
+
+            renderCalendarGrid() {
+                const grid = document.getElementById('calendarGrid');
+                const year = this.currentCalendarDate.getFullYear();
+                const month = this.currentCalendarDate.getMonth();
+                
+                // Clear existing content
+                grid.innerHTML = '';
+                
+                // Add day headers
+                const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                dayHeaders.forEach(day => {
+                    const header = document.createElement('div');
+                    header.className = 'calendar-day-header';
+                    header.textContent = day;
+                    grid.appendChild(header);
+                });
+                
+                // Get first day of month and number of days
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                const daysInMonth = lastDay.getDate();
+                const startingDayOfWeek = firstDay.getDay();
+                
+                // Add empty cells for days before month starts
+                for (let i = 0; i < startingDayOfWeek; i++) {
+                    const emptyDay = document.createElement('div');
+                    emptyDay.className = 'calendar-day other-month';
+                    const prevMonthDay = new Date(year, month, 0 - (startingDayOfWeek - 1 - i));
+                    emptyDay.textContent = prevMonthDay.getDate();
+                    grid.appendChild(emptyDay);
+                }
+                
+                // Add days of current month
+                const today = new Date();
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayElement = document.createElement('div');
+                    const currentDate = new Date(year, month, day);
+                    const dateKey = currentDate.toDateString();
+                    
+                    dayElement.className = 'calendar-day';
+                    dayElement.textContent = day;
+                    dayElement.dataset.date = dateKey;
+                    
+                    // Add today class
+                    if (currentDate.toDateString() === today.toDateString()) {
+                        dayElement.classList.add('today');
+                    }
+                    
+                    // Add activity classes
+                    if (this.activityData.has(dateKey)) {
+                        const activityLevel = this.getActivityLevel(this.activityData.get(dateKey).count);
+                        dayElement.classList.add('has-commits', activityLevel);
+                        
+                        // Add activity indicator
+                        const indicator = document.createElement('div');
+                        indicator.className = 'activity-indicator';
+                        if (this.activityData.get(dateKey).repos.size > 1) {
+                            indicator.classList.add('multiple');
+                        }
+                        dayElement.appendChild(indicator);
+                        
+                        // Add streak indicator for high activity
+                        if (activityLevel === 'high-activity') {
+                            const streak = document.createElement('div');
+                            streak.className = 'streak-indicator';
+                            streak.textContent = this.activityData.get(dateKey).count;
+                            dayElement.appendChild(streak);
+                        }
+                    }
+                    
+                    // Add selected class
+                    if (this.selectedDates.has(dateKey)) {
+                        dayElement.classList.add('selected');
+                    }
+                    
+                    // Add click handler
+                    dayElement.addEventListener('click', (e) => {
+                        this.handleDateClick(dateKey, e);
+                    });
+                    
+                    // Add hover tooltip
+                    dayElement.addEventListener('mouseenter', (e) => {
+                        this.showCalendarTooltip(e, dateKey);
+                    });
+                    
+                    dayElement.addEventListener('mouseleave', () => {
+                        this.hideCalendarTooltip();
+                    });
+                    
+                    grid.appendChild(dayElement);
+                }
+                
+                // Fill remaining cells
+                const totalCells = 42; // 6 rows × 7 days
+                const cellsUsed = startingDayOfWeek + daysInMonth;
+                for (let i = cellsUsed; i < totalCells; i++) {
+                    const nextMonthDay = document.createElement('div');
+                    nextMonthDay.className = 'calendar-day other-month';
+                    const nextDate = new Date(year, month + 1, i - cellsUsed + 1);
+                    nextMonthDay.textContent = nextDate.getDate();
+                    grid.appendChild(nextMonthDay);
+                }
+            }
+
+            getActivityLevel(count) {
+                if (count >= 3) return 'high-activity';
+                if (count >= 2) return 'medium-activity';
+                if (count >= 1) return 'low-activity';
+                return '';
+            }
+
+            handleDateClick(dateKey, event) {
+                // Toggle date selection
+                if (this.selectedDates.has(dateKey)) {
+                    this.selectedDates.delete(dateKey);
+                } else {
+                    // For single selection, clear others first
+                    if (!event.ctrlKey && !event.metaKey) {
+                        this.selectedDates.clear();
+                    }
+                    this.selectedDates.add(dateKey);
+                }
+                
+                // Apply date filter
+                if (this.selectedDates.size > 0) {
+                    this.applySelectedDatesFilter();
+                } else {
+                    // Clear date filter
+                    this.dateFrom = '';
+                    this.dateTo = '';
+                    document.getElementById('dateFrom').value = '';
+                    document.getElementById('dateTo').value = '';
+                }
+                
+                this.renderCalendarGrid();
+                this.filterSummaries();
+                this.renderActiveFilters();
+            }
+
+            applySelectedDatesFilter() {
+                const selectedDatesArray = Array.from(this.selectedDates).map(dateKey => new Date(dateKey));
+                selectedDatesArray.sort((a, b) => a - b);
+                
+                const fromDate = selectedDatesArray[0];
+                const toDate = selectedDatesArray[selectedDatesArray.length - 1];
+                
+                this.dateFrom = fromDate.toISOString().split('T')[0];
+                this.dateTo = toDate.toISOString().split('T')[0];
+                
+                document.getElementById('dateFrom').value = this.dateFrom;
+                document.getElementById('dateTo').value = this.dateTo;
+            }
+
+            showCalendarTooltip(event, dateKey) {
+                const tooltip = document.getElementById('calendarTooltip');
+                const activityData = this.activityData.get(dateKey);
+                
+                if (!activityData) {
+                    tooltip.innerHTML = `
+                        <div><strong>${new Date(dateKey).toLocaleDateString()}</strong></div>
+                        <div>No commits</div>
+                    `;
+                } else {
+                    const repoList = Array.from(activityData.repos).join(', ');
+                    tooltip.innerHTML = `
+                        <div><strong>${new Date(dateKey).toLocaleDateString()}</strong></div>
+                        <div>${activityData.count} commit${activityData.count > 1 ? 's' : ''}</div>
+                        <div>Repositories: ${repoList}</div>
+                        <div style="margin-top: 5px; font-size: 0.7rem; opacity: 0.8;">Click to filter</div>
+                    `;
+                }
+                
+                tooltip.style.left = event.pageX + 10 + 'px';
+                tooltip.style.top = event.pageY - 10 + 'px';
+                tooltip.classList.add('show');
+            }
+
+            hideCalendarTooltip() {
+                document.getElementById('calendarTooltip').classList.remove('show');
+            }
+
+            renderCalendarStats() {
+                const currentMonth = this.currentCalendarDate.getMonth();
+                const currentYear = this.currentCalendarDate.getFullYear();
+                
+                // Calculate month commits
+                let monthCommits = 0;
+                this.activityData.forEach((data, dateKey) => {
+                    const date = new Date(dateKey);
+                    if (date.getMonth() === currentMonth && date.getFullYear() === currentYear) {
+                        monthCommits += data.count;
+                    }
+                });
+                
+                // Calculate active days in current month
+                let activeDays = 0;
+                this.activityData.forEach((data, dateKey) => {
+                    const date = new Date(dateKey);
+                    if (date.getMonth() === currentMonth && date.getFullYear() === currentYear) {
+                        activeDays++;
+                    }
+                });
+                
+                document.getElementById('monthCommits').textContent = monthCommits;
+                document.getElementById('currentStreak').textContent = this.streakData.current;
+                document.getElementById('longestStreak').textContent = this.streakData.longest;
+                document.getElementById('activeDays').textContent = activeDays;
+            }
+
+            renderRepoDistribution() {
+                const repoStats = new Map();
+                
+                // Calculate repository activity for current month
+                const currentMonth = this.currentCalendarDate.getMonth();
+                const currentYear = this.currentCalendarDate.getFullYear();
+                
+                this.activityData.forEach((data, dateKey) => {
+                    const date = new Date(dateKey);
+                    if (date.getMonth() === currentMonth && date.getFullYear() === currentYear) {
+                        data.repos.forEach(repo => {
+                            repoStats.set(repo, (repoStats.get(repo) || 0) + data.count);
+                        });
+                    }
+                });
+                
+                const totalCommits = Array.from(repoStats.values()).reduce((sum, count) => sum + count, 0);
+                const sortedRepos = Array.from(repoStats.entries()).sort((a, b) => b[1] - a[1]);
+                
+                const container = document.getElementById('repoDistribution');
+                container.innerHTML = sortedRepos.map(([repo, count]) => {
+                    const percentage = totalCommits > 0 ? (count / totalCommits) * 100 : 0;
+                    const color = this.getRepoColor(repo);
+                    
+                    return `
+                        <div class="repo-bar" data-repo="${repo}">
+                            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                                <span style="font-size: 0.9rem; font-weight: 500;">${repo}</span>
+                                <span style="font-size: 0.8rem; color: #666;">${count}</span>
+                            </div>
+                            <div class="repo-bar-fill" style="width: ${percentage}%; background: ${color};"></div>
+                        </div>
+                    `;
+                }).join('');
+                
+                // Add click handlers
+                container.querySelectorAll('.repo-bar').forEach(bar => {
+                    bar.addEventListener('click', (e) => {
+                        const repo = e.currentTarget.dataset.repo;
+                        this.currentFilter = repo;
+                        this.updateFilterButtons();
+                        this.filterSummaries();
+                        this.renderActiveFilters();
+                    });
+                });
+            }
+
+            getRepoColor(repo) {
+                const colors = {
+                    'commit_summery': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    'oso': 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+                    '.config': 'linear-gradient(135deg, #fd7e14 0%, #ffc107 100%)'
+                };
+                return colors[repo] || 'linear-gradient(135deg, #6c757d 0%, #495057 100%)';
+            }
+
+            renderActivityPatterns() {
+                // Calculate weekday vs weekend averages
+                let weekdayCommits = 0;
+                let weekendCommits = 0;
+                let weekdayDays = 0;
+                let weekendDays = 0;
+                
+                const dayCommits = new Array(7).fill(0);
+                const dayCounts = new Array(7).fill(0);
+                
+                this.activityData.forEach((data, dateKey) => {
+                    const date = new Date(dateKey);
+                    const dayOfWeek = date.getDay();
+                    
+                    dayCommits[dayOfWeek] += data.count;
+                    dayCounts[dayOfWeek]++;
+                    
+                    if (dayOfWeek === 0 || dayOfWeek === 6) {
+                        weekendCommits += data.count;
+                        weekendDays++;
+                    } else {
+                        weekdayCommits += data.count;
+                        weekdayDays++;
+                    }
+                });
+                
+                const weekdayAvg = weekdayDays > 0 ? (weekdayCommits / weekdayDays).toFixed(1) : '0';
+                const weekendAvg = weekendDays > 0 ? (weekendCommits / weekendDays).toFixed(1) : '0';
+                
+                // Find most active day
+                const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                let mostActiveDay = 'N/A';
+                let maxAvg = 0;
+                
+                dayCommits.forEach((commits, index) => {
+                    if (dayCounts[index] > 0) {
+                        const avg = commits / dayCounts[index];
+                        if (avg > maxAvg) {
+                            maxAvg = avg;
+                            mostActiveDay = dayNames[index];
+                        }
+                    }
+                });
+                
+                // Calculate peak hour (simplified - based on most recent commits)
+                const peakHour = this.calculatePeakHour();
+                
+                document.getElementById('weekdayAvg').textContent = weekdayAvg;
+                document.getElementById('weekendAvg').textContent = weekendAvg;
+                document.getElementById('peakHour').textContent = peakHour;
+                document.getElementById('mostActiveDay').textContent = mostActiveDay;
+            }
+
+            calculatePeakHour() {
+                // Simplified peak hour calculation based on timestamp patterns
+                const hours = new Array(24).fill(0);
+                
+                this.summaries.forEach(summary => {
+                    const hour = summary.timestamp.getHours();
+                    hours[hour]++;
+                });
+                
+                let peakHour = 0;
+                let maxCommits = 0;
+                
+                hours.forEach((count, hour) => {
+                    if (count > maxCommits) {
+                        maxCommits = count;
+                        peakHour = hour;
+                    }
+                });
+                
+                return maxCommits > 0 ? `${peakHour}:00` : 'N/A';
+            }
+
+            updateCalendarView() {
+                const monthSection = document.getElementById('calendarGrid').parentElement;
+                const heatmapSection = document.getElementById('heatmapSection');
+                const monthBtn = document.getElementById('monthView');
+                const heatmapBtn = document.getElementById('heatmapView');
+                
+                if (this.calendarView === 'month') {
+                    monthSection.style.display = 'block';
+                    heatmapSection.style.display = 'none';
+                    monthBtn.classList.add('active');
+                    heatmapBtn.classList.remove('active');
+                } else {
+                    monthSection.style.display = 'none';
+                    heatmapSection.style.display = 'block';
+                    monthBtn.classList.remove('active');
+                    heatmapBtn.classList.add('active');
+                    this.renderHeatmap();
+                }
+            }
+
+            renderHeatmap() {
+                const heatmapGrid = document.getElementById('heatmapGrid');
+                heatmapGrid.innerHTML = '';
+                
+                // Generate year heatmap (simplified version)
+                const currentYear = this.currentCalendarDate.getFullYear();
+                const startDate = new Date(currentYear, 0, 1);
+                const endDate = new Date(currentYear, 11, 31);
+                
+                const maxActivity = Math.max(...Array.from(this.activityData.values()).map(data => data.count));
+                
+                for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                    const dateKey = d.toDateString();
+                    const cell = document.createElement('div');
+                    cell.className = 'heatmap-cell';
+                    
+                    if (this.activityData.has(dateKey)) {
+                        const activity = this.activityData.get(dateKey).count;
+                        const level = Math.min(4, Math.ceil((activity / maxActivity) * 4));
+                        cell.classList.add(`level-${level}`);
+                    } else {
+                        cell.classList.add('level-0');
+                    }
+                    
+                    cell.addEventListener('mouseenter', (e) => {
+                        this.showCalendarTooltip(e, dateKey);
+                    });
+                    
+                    cell.addEventListener('mouseleave', () => {
+                        this.hideCalendarTooltip();
+                    });
+                    
+                    heatmapGrid.appendChild(cell);
+                }
+            }
+
+            applyDateFilter(filterType) {
+                const today = new Date();
+                let fromDate, toDate;
+                
+                switch (filterType) {
+                    case 'today':
+                        fromDate = toDate = today;
+                        break;
+                    case 'week':
+                        fromDate = new Date(today);
+                        fromDate.setDate(today.getDate() - today.getDay());
+                        toDate = new Date(fromDate);
+                        toDate.setDate(fromDate.getDate() + 6);
+                        break;
+                    case 'month':
+                        fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                        toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                        break;
+                    case 'year':
+                        fromDate = new Date(today.getFullYear(), 0, 1);
+                        toDate = new Date(today.getFullYear(), 11, 31);
+                        break;
+                }
+                
+                this.dateFrom = fromDate.toISOString().split('T')[0];
+                this.dateTo = toDate.toISOString().split('T')[0];
+                
+                document.getElementById('dateFrom').value = this.dateFrom;
+                document.getElementById('dateTo').value = this.dateTo;
+                
+                this.filterSummaries();
+                this.renderActiveFilters();
+                
+                // Update button states
+                document.querySelectorAll('#filterToday, #filterWeek, #filterMonth, #filterYear').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.getElementById(`filter${filterType.charAt(0).toUpperCase() + filterType.slice(1)}`).classList.add('active');
+            }
                 this.allTags.clear();
                 this.summaries.forEach(summary => {
                     summary.tags.forEach(tag => {
@@ -1229,12 +2222,75 @@
             }
 
             setupEventListeners() {
-                // Sidebar toggle
+                // Sidebar toggles
                 document.getElementById('sidebarToggle').addEventListener('click', () => {
                     const sidebar = document.getElementById('sidebar');
                     const mainContent = document.getElementById('mainContent');
-                    sidebar.classList.toggle('collapsed');
-                    mainContent.classList.toggle('expanded');
+                    const isCollapsed = sidebar.classList.toggle('collapsed');
+                    
+                    if (isCollapsed) {
+                        mainContent.classList.add('left-expanded');
+                    } else {
+                        mainContent.classList.remove('left-expanded');
+                    }
+                    this.updateMainContentMargins();
+                });
+
+                document.getElementById('calendarToggle').addEventListener('click', () => {
+                    const rightSidebar = document.getElementById('rightSidebar');
+                    const mainContent = document.getElementById('mainContent');
+                    const isCollapsed = rightSidebar.classList.toggle('collapsed');
+                    
+                    if (isCollapsed) {
+                        mainContent.classList.add('right-expanded');
+                    } else {
+                        mainContent.classList.remove('right-expanded');
+                    }
+                    this.updateMainContentMargins();
+                });
+
+                // Calendar navigation
+                document.getElementById('prevMonth').addEventListener('click', () => {
+                    this.currentCalendarDate.setMonth(this.currentCalendarDate.getMonth() - 1);
+                    this.renderCalendar();
+                });
+
+                document.getElementById('nextMonth').addEventListener('click', () => {
+                    this.currentCalendarDate.setMonth(this.currentCalendarDate.getMonth() + 1);
+                    this.renderCalendar();
+                });
+
+                // Calendar view toggles
+                document.getElementById('monthView').addEventListener('click', () => {
+                    this.calendarView = 'month';
+                    this.updateCalendarView();
+                });
+
+                document.getElementById('heatmapView').addEventListener('click', () => {
+                    this.calendarView = 'heatmap';
+                    this.updateCalendarView();
+                });
+
+                document.getElementById('todayBtn').addEventListener('click', () => {
+                    this.currentCalendarDate = new Date();
+                    this.renderCalendar();
+                });
+
+                // Quick date filters
+                document.getElementById('filterToday').addEventListener('click', () => {
+                    this.applyDateFilter('today');
+                });
+
+                document.getElementById('filterWeek').addEventListener('click', () => {
+                    this.applyDateFilter('week');
+                });
+
+                document.getElementById('filterMonth').addEventListener('click', () => {
+                    this.applyDateFilter('month');
+                });
+
+                document.getElementById('filterYear').addEventListener('click', () => {
+                    this.applyDateFilter('year');
                 });
 
                 // Enhanced search functionality
@@ -1316,6 +2372,21 @@
                 document.getElementById('saveCurrentSearch').addEventListener('click', () => {
                     this.saveCurrentSearch();
                 });
+            }
+
+            updateMainContentMargins() {
+                const mainContent = document.getElementById('mainContent');
+                const leftCollapsed = document.getElementById('sidebar').classList.contains('collapsed');
+                const rightCollapsed = document.getElementById('rightSidebar').classList.contains('collapsed');
+                
+                mainContent.className = 'main-content';
+                if (leftCollapsed && rightCollapsed) {
+                    mainContent.classList.add('both-expanded');
+                } else if (leftCollapsed) {
+                    mainContent.classList.add('left-expanded');
+                } else if (rightCollapsed) {
+                    mainContent.classList.add('right-expanded');
+                }
             }
 
             handleSearch(query) {
