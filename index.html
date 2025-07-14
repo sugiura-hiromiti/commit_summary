@@ -456,9 +456,21 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
+        .search-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .search-input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
         .search-box {
             width: 100%;
-            padding: 15px 20px;
+            padding: 15px 50px 15px 20px;
             font-size: 1.1rem;
             border: 2px solid #e9ecef;
             border-radius: 10px;
@@ -468,6 +480,260 @@
 
         .search-box:focus {
             border-color: #667eea;
+        }
+
+        .search-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .search-suggestions.show {
+            display: block;
+        }
+
+        .suggestion-item {
+            padding: 12px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #f8f9fa;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.3s ease;
+        }
+
+        .suggestion-item:hover {
+            background: #f8f9fa;
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-type {
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .suggestion-type.repo {
+            background: #28a745;
+        }
+
+        .suggestion-type.date {
+            background: #fd7e14;
+        }
+
+        .suggestion-type.tag {
+            background: #6f42c1;
+        }
+
+        .search-clear {
+            position: absolute;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s ease;
+        }
+
+        .search-clear:hover {
+            color: #333;
+        }
+
+        .search-operators {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .operator-example {
+            background: #f8f9fa;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .operator-example:hover {
+            background: #e9ecef;
+        }
+
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .tag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .tag.active {
+            background: white;
+            color: #667eea;
+            border-color: #667eea;
+        }
+
+        .tag.repo-tag {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .tag.repo-tag.active {
+            color: #28a745;
+            border-color: #28a745;
+        }
+
+        .tag.nature-tag {
+            background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%);
+        }
+
+        .tag.nature-tag.active {
+            color: #fd7e14;
+            border-color: #fd7e14;
+        }
+
+        .tag.time-tag {
+            background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
+        }
+
+        .tag.time-tag.active {
+            color: #6f42c1;
+            border-color: #6f42c1;
+        }
+
+        .tag-icon {
+            font-size: 0.8rem;
+        }
+
+        .tag-remove {
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            color: inherit;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.3s ease;
+        }
+
+        .tag-remove:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .active-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .active-filter {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .filter-remove {
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .summary-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+            border-color: #667eea;
+        }
+
+        .summary-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 10px 0 15px 0;
+        }
+
+        .summary-tag {
+            background: #f8f9fa;
+            color: #666;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            border: 1px solid #e9ecef;
+        }
+
+        .summary-tag.repo {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+            border-color: rgba(40, 167, 69, 0.3);
+        }
+
+        .summary-tag.nature {
+            background: rgba(253, 126, 20, 0.1);
+            color: #fd7e14;
+            border-color: rgba(253, 126, 20, 0.3);
+        }
+
+        .summary-tag.time {
+            background: rgba(111, 66, 193, 0.1);
+            color: #6f42c1;
+            border-color: rgba(111, 66, 193, 0.3);
         }
 
         .filters {
@@ -740,7 +1006,28 @@
         </header>
 
         <div class="search-section">
-            <input type="text" class="search-box" id="searchBox" placeholder="Search repositories, dates, or content...">
+            <div class="search-container">
+                <div class="search-input-group">
+                    <input type="text" class="search-box" id="searchBox" placeholder="Search by repository, date, tags, or content... Try: repo:oso, date:2025-07, tag:feature">
+                    <button class="search-clear" id="searchClear" style="display: none;">×</button>
+                    <div class="search-suggestions" id="searchSuggestions"></div>
+                </div>
+                
+                <div class="search-operators">
+                    <span>Quick search:</span>
+                    <span class="operator-example" data-query="repo:commit_summery">repo:name</span>
+                    <span class="operator-example" data-query="date:2025-07">date:2025-07</span>
+                    <span class="operator-example" data-query="tag:feature">tag:feature</span>
+                    <span class="operator-example" data-query="recent">recent</span>
+                </div>
+
+                <div class="active-filters" id="activeFilters"></div>
+            </div>
+
+            <div class="tags-container" id="tagsContainer">
+                <!-- Tags populated by JavaScript -->
+            </div>
+
             <div class="filters">
                 <button class="filter-btn active" data-filter="all">All Repositories</button>
                 <button class="filter-btn" data-filter="commit_summery">commit_summery</button>
@@ -786,18 +1073,23 @@
                 this.dateFrom = '';
                 this.dateTo = '';
                 this.selectedRepos = new Set();
+                this.activeTags = new Set();
                 this.searchHistory = JSON.parse(localStorage.getItem('searchHistory') || '[]');
                 this.savedSearches = JSON.parse(localStorage.getItem('savedSearches') || '[]');
+                this.allTags = new Set();
+                this.searchSuggestions = [];
                 
                 this.init();
             }
 
             async init() {
                 await this.loadSummaries();
+                this.generateTags();
                 this.setupEventListeners();
                 this.updateStats();
                 this.renderSummaries();
                 this.renderSidebar();
+                this.renderTags();
             }
 
             async loadSummaries() {
@@ -830,6 +1122,7 @@
                     }
 
                     const timestamp = this.parseTimestamp(dateStr, timeStr);
+                    const tags = this.generateSummaryTags(repoName, timestamp, filename);
                     
                     return {
                         filename: file,
@@ -837,12 +1130,75 @@
                         date: dateStr,
                         time: timeStr,
                         timestamp: timestamp,
-                        displayDate: this.formatDate(timestamp)
+                        displayDate: this.formatDate(timestamp),
+                        tags: tags
                     };
                 });
 
                 this.applySorting();
                 this.filteredSummaries = [...this.summaries];
+            }
+
+            generateSummaryTags(repoName, timestamp, filename) {
+                const tags = [];
+                
+                // Repository tags
+                tags.push({ type: 'repo', value: repoName, label: `📁 ${repoName}` });
+                
+                // Time-based tags
+                const now = new Date();
+                const daysDiff = Math.floor((now - timestamp) / (1000 * 60 * 60 * 24));
+                
+                if (daysDiff === 0) tags.push({ type: 'time', value: 'today', label: '🕐 Today' });
+                else if (daysDiff === 1) tags.push({ type: 'time', value: 'yesterday', label: '🕐 Yesterday' });
+                else if (daysDiff <= 7) tags.push({ type: 'time', value: 'this-week', label: '📅 This Week' });
+                else if (daysDiff <= 30) tags.push({ type: 'time', value: 'this-month', label: '📅 This Month' });
+                
+                const year = timestamp.getFullYear();
+                const month = timestamp.toLocaleDateString('en-US', { month: 'long' });
+                tags.push({ type: 'time', value: `${year}`, label: `📅 ${year}` });
+                tags.push({ type: 'time', value: `${year}-${timestamp.getMonth() + 1}`, label: `📅 ${month} ${year}` });
+                
+                // Nature tags based on repository and patterns
+                const natureTags = this.inferCommitNature(repoName, filename);
+                natureTags.forEach(tag => tags.push(tag));
+                
+                return tags;
+            }
+
+            inferCommitNature(repoName, filename) {
+                const tags = [];
+                
+                // Repository-specific nature inference
+                if (repoName === 'commit_summery') {
+                    tags.push({ type: 'nature', value: 'documentation', label: '📝 Documentation' });
+                    tags.push({ type: 'nature', value: 'automation', label: '🤖 Automation' });
+                } else if (repoName === '.config') {
+                    tags.push({ type: 'nature', value: 'configuration', label: '⚙️ Configuration' });
+                    tags.push({ type: 'nature', value: 'setup', label: '🔧 Setup' });
+                } else if (repoName === 'oso') {
+                    tags.push({ type: 'nature', value: 'development', label: '💻 Development' });
+                    tags.push({ type: 'nature', value: 'feature', label: '✨ Feature' });
+                }
+                
+                // Time-based nature (weekend vs weekday commits)
+                const dayOfWeek = new Date().getDay();
+                if (dayOfWeek === 0 || dayOfWeek === 6) {
+                    tags.push({ type: 'nature', value: 'weekend', label: '🏖️ Weekend' });
+                } else {
+                    tags.push({ type: 'nature', value: 'weekday', label: '💼 Weekday' });
+                }
+                
+                return tags;
+            }
+
+            generateTags() {
+                this.allTags.clear();
+                this.summaries.forEach(summary => {
+                    summary.tags.forEach(tag => {
+                        this.allTags.add(JSON.stringify(tag));
+                    });
+                });
             }
 
             parseTimestamp(dateStr, timeStr) {
@@ -881,11 +1237,44 @@
                     mainContent.classList.toggle('expanded');
                 });
 
-                // Search functionality
-                document.getElementById('searchBox').addEventListener('input', (e) => {
-                    this.searchTerm = e.target.value.toLowerCase();
-                    this.addToSearchHistory(this.searchTerm);
+                // Enhanced search functionality
+                const searchBox = document.getElementById('searchBox');
+                const searchClear = document.getElementById('searchClear');
+                const searchSuggestions = document.getElementById('searchSuggestions');
+
+                searchBox.addEventListener('input', (e) => {
+                    const value = e.target.value;
+                    this.handleSearch(value);
+                    searchClear.style.display = value ? 'block' : 'none';
+                    this.showSearchSuggestions(value);
+                });
+
+                searchBox.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        this.executeSearch(e.target.value);
+                        searchSuggestions.classList.remove('show');
+                    }
+                });
+
+                searchBox.addEventListener('blur', () => {
+                    setTimeout(() => searchSuggestions.classList.remove('show'), 200);
+                });
+
+                searchClear.addEventListener('click', () => {
+                    searchBox.value = '';
+                    this.searchTerm = '';
+                    searchClear.style.display = 'none';
                     this.filterSummaries();
+                    this.renderActiveFilters();
+                });
+
+                // Search operator examples
+                document.querySelectorAll('.operator-example').forEach(example => {
+                    example.addEventListener('click', (e) => {
+                        const query = e.target.dataset.query;
+                        searchBox.value = query;
+                        this.executeSearch(query);
+                    });
                 });
 
                 // Filter buttons
@@ -895,6 +1284,7 @@
                         e.target.classList.add('active');
                         this.currentFilter = e.target.dataset.filter;
                         this.filterSummaries();
+                        this.renderActiveFilters();
                     });
                 });
 
@@ -902,11 +1292,13 @@
                 document.getElementById('dateFrom').addEventListener('change', (e) => {
                     this.dateFrom = e.target.value;
                     this.filterSummaries();
+                    this.renderActiveFilters();
                 });
 
                 document.getElementById('dateTo').addEventListener('change', (e) => {
                     this.dateTo = e.target.value;
                     this.filterSummaries();
+                    this.renderActiveFilters();
                 });
 
                 // Sort options
@@ -924,6 +1316,178 @@
                 document.getElementById('saveCurrentSearch').addEventListener('click', () => {
                     this.saveCurrentSearch();
                 });
+            }
+
+            handleSearch(query) {
+                this.searchTerm = query.toLowerCase();
+                this.addToSearchHistory(query);
+                this.filterSummaries();
+                this.renderActiveFilters();
+            }
+
+            executeSearch(query) {
+                const parsedQuery = this.parseSearchQuery(query);
+                
+                // Apply parsed filters
+                if (parsedQuery.repo) {
+                    this.currentFilter = parsedQuery.repo;
+                    this.updateFilterButtons();
+                }
+                
+                if (parsedQuery.date) {
+                    this.applyDateFilter(parsedQuery.date);
+                }
+                
+                if (parsedQuery.tags.length > 0) {
+                    parsedQuery.tags.forEach(tag => this.activeTags.add(tag));
+                    this.renderTags();
+                }
+                
+                if (parsedQuery.text) {
+                    this.searchTerm = parsedQuery.text.toLowerCase();
+                }
+                
+                this.filterSummaries();
+                this.renderActiveFilters();
+            }
+
+            parseSearchQuery(query) {
+                const result = {
+                    repo: null,
+                    date: null,
+                    tags: [],
+                    text: ''
+                };
+                
+                const parts = query.split(/\s+/);
+                const textParts = [];
+                
+                parts.forEach(part => {
+                    if (part.startsWith('repo:')) {
+                        result.repo = part.substring(5);
+                    } else if (part.startsWith('date:')) {
+                        result.date = part.substring(5);
+                    } else if (part.startsWith('tag:')) {
+                        result.tags.push(part.substring(4));
+                    } else if (part === 'recent') {
+                        result.date = 'recent';
+                    } else {
+                        textParts.push(part);
+                    }
+                });
+                
+                result.text = textParts.join(' ');
+                return result;
+            }
+
+            applyDateFilter(dateFilter) {
+                if (dateFilter === 'recent') {
+                    this.currentFilter = 'recent';
+                    this.updateFilterButtons();
+                } else if (dateFilter.includes('-')) {
+                    // Handle date range or specific date
+                    const parts = dateFilter.split('-');
+                    if (parts.length === 2) {
+                        // Year-month format
+                        const year = parseInt(parts[0]);
+                        const month = parseInt(parts[1]) - 1;
+                        const startDate = new Date(year, month, 1);
+                        const endDate = new Date(year, month + 1, 0);
+                        
+                        document.getElementById('dateFrom').value = startDate.toISOString().split('T')[0];
+                        document.getElementById('dateTo').value = endDate.toISOString().split('T')[0];
+                        this.dateFrom = startDate.toISOString().split('T')[0];
+                        this.dateTo = endDate.toISOString().split('T')[0];
+                    }
+                }
+            }
+
+            showSearchSuggestions(query) {
+                if (!query || query.length < 2) {
+                    document.getElementById('searchSuggestions').classList.remove('show');
+                    return;
+                }
+                
+                const suggestions = this.generateSearchSuggestions(query);
+                const suggestionsContainer = document.getElementById('searchSuggestions');
+                
+                if (suggestions.length === 0) {
+                    suggestionsContainer.classList.remove('show');
+                    return;
+                }
+                
+                suggestionsContainer.innerHTML = suggestions.map(suggestion => `
+                    <div class="suggestion-item" data-query="${suggestion.query}">
+                        <span class="suggestion-type ${suggestion.type}">${suggestion.type}</span>
+                        <span>${suggestion.label}</span>
+                    </div>
+                `).join('');
+                
+                suggestionsContainer.classList.add('show');
+                
+                // Add click handlers
+                suggestionsContainer.querySelectorAll('.suggestion-item').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        const query = e.currentTarget.dataset.query;
+                        document.getElementById('searchBox').value = query;
+                        this.executeSearch(query);
+                        suggestionsContainer.classList.remove('show');
+                    });
+                });
+            }
+
+            generateSearchSuggestions(query) {
+                const suggestions = [];
+                const lowerQuery = query.toLowerCase();
+                
+                // Repository suggestions
+                const repos = [...new Set(this.summaries.map(s => s.repoName))];
+                repos.forEach(repo => {
+                    if (repo.toLowerCase().includes(lowerQuery)) {
+                        suggestions.push({
+                            type: 'repo',
+                            label: `Repository: ${repo}`,
+                            query: `repo:${repo}`
+                        });
+                    }
+                });
+                
+                // Date suggestions
+                const currentYear = new Date().getFullYear();
+                const months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+                
+                if (lowerQuery.includes('2025') || lowerQuery.includes('2024')) {
+                    suggestions.push({
+                        type: 'date',
+                        label: `Year: ${currentYear}`,
+                        query: `date:${currentYear}`
+                    });
+                }
+                
+                months.forEach((month, index) => {
+                    const monthName = new Date(currentYear, index, 1).toLocaleDateString('en-US', { month: 'long' });
+                    if (monthName.toLowerCase().includes(lowerQuery)) {
+                        suggestions.push({
+                            type: 'date',
+                            label: `${monthName} ${currentYear}`,
+                            query: `date:${currentYear}-${month}`
+                        });
+                    }
+                });
+                
+                // Tag suggestions
+                const allTags = Array.from(this.allTags).map(tag => JSON.parse(tag));
+                allTags.forEach(tag => {
+                    if (tag.value.toLowerCase().includes(lowerQuery) || tag.label.toLowerCase().includes(lowerQuery)) {
+                        suggestions.push({
+                            type: 'tag',
+                            label: tag.label,
+                            query: `tag:${tag.value}`
+                        });
+                    }
+                });
+                
+                return suggestions.slice(0, 8);
             }
 
             applySorting() {
@@ -947,13 +1511,136 @@
                 }
             }
 
+            renderTags() {
+                const tagsContainer = document.getElementById('tagsContainer');
+                const allTags = Array.from(this.allTags).map(tag => JSON.parse(tag));
+                
+                // Group tags by type
+                const tagsByType = {
+                    repo: allTags.filter(tag => tag.type === 'repo'),
+                    nature: allTags.filter(tag => tag.type === 'nature'),
+                    time: allTags.filter(tag => tag.type === 'time')
+                };
+                
+                let tagsHTML = '';
+                
+                Object.entries(tagsByType).forEach(([type, tags]) => {
+                    if (tags.length > 0) {
+                        tags.forEach(tag => {
+                            const isActive = this.activeTags.has(tag.value);
+                            tagsHTML += `
+                                <div class="tag ${type}-tag ${isActive ? 'active' : ''}" data-tag="${tag.value}" data-type="${tag.type}">
+                                    <span class="tag-icon">${tag.label.split(' ')[0]}</span>
+                                    <span>${tag.label.substring(tag.label.indexOf(' ') + 1)}</span>
+                                    ${isActive ? '<button class="tag-remove">×</button>' : ''}
+                                </div>
+                            `;
+                        });
+                    }
+                });
+                
+                tagsContainer.innerHTML = tagsHTML;
+                
+                // Add event listeners
+                tagsContainer.querySelectorAll('.tag').forEach(tagElement => {
+                    tagElement.addEventListener('click', (e) => {
+                        if (e.target.classList.contains('tag-remove')) {
+                            e.stopPropagation();
+                            const tagValue = tagElement.dataset.tag;
+                            this.activeTags.delete(tagValue);
+                        } else {
+                            const tagValue = tagElement.dataset.tag;
+                            if (this.activeTags.has(tagValue)) {
+                                this.activeTags.delete(tagValue);
+                            } else {
+                                this.activeTags.add(tagValue);
+                            }
+                        }
+                        this.renderTags();
+                        this.filterSummaries();
+                        this.renderActiveFilters();
+                    });
+                });
+            }
+
+            renderActiveFilters() {
+                const activeFiltersContainer = document.getElementById('activeFilters');
+                const filters = [];
+                
+                if (this.searchTerm) {
+                    filters.push({ type: 'search', label: `Search: "${this.searchTerm}"`, value: 'search' });
+                }
+                
+                if (this.currentFilter !== 'all') {
+                    filters.push({ type: 'filter', label: `Filter: ${this.currentFilter}`, value: 'filter' });
+                }
+                
+                if (this.dateFrom || this.dateTo) {
+                    const dateLabel = `Date: ${this.dateFrom || 'any'} to ${this.dateTo || 'any'}`;
+                    filters.push({ type: 'date', label: dateLabel, value: 'date' });
+                }
+                
+                if (this.activeTags.size > 0) {
+                    Array.from(this.activeTags).forEach(tag => {
+                        filters.push({ type: 'tag', label: `Tag: ${tag}`, value: tag });
+                    });
+                }
+                
+                if (filters.length === 0) {
+                    activeFiltersContainer.innerHTML = '';
+                    return;
+                }
+                
+                activeFiltersContainer.innerHTML = filters.map(filter => `
+                    <div class="active-filter">
+                        <span>${filter.label}</span>
+                        <button class="filter-remove" data-type="${filter.type}" data-value="${filter.value}">×</button>
+                    </div>
+                `).join('');
+                
+                // Add remove handlers
+                activeFiltersContainer.querySelectorAll('.filter-remove').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const type = e.target.dataset.type;
+                        const value = e.target.dataset.value;
+                        
+                        switch (type) {
+                            case 'search':
+                                document.getElementById('searchBox').value = '';
+                                this.searchTerm = '';
+                                break;
+                            case 'filter':
+                                this.currentFilter = 'all';
+                                this.updateFilterButtons();
+                                break;
+                            case 'date':
+                                document.getElementById('dateFrom').value = '';
+                                document.getElementById('dateTo').value = '';
+                                this.dateFrom = '';
+                                this.dateTo = '';
+                                break;
+                            case 'tag':
+                                this.activeTags.delete(value);
+                                this.renderTags();
+                                break;
+                        }
+                        
+                        this.filterSummaries();
+                        this.renderActiveFilters();
+                    });
+                });
+            }
             filterSummaries() {
                 this.filteredSummaries = this.summaries.filter(summary => {
                     // Search filter
                     const matchesSearch = !this.searchTerm || 
                         summary.repoName.toLowerCase().includes(this.searchTerm) ||
                         summary.date.toLowerCase().includes(this.searchTerm) ||
-                        summary.displayDate.toLowerCase().includes(this.searchTerm);
+                        summary.displayDate.toLowerCase().includes(this.searchTerm) ||
+                        summary.tags.some(tag => 
+                            tag.value.toLowerCase().includes(this.searchTerm) ||
+                            tag.label.toLowerCase().includes(this.searchTerm)
+                        );
 
                     // Category filter
                     let matchesFilter = true;
@@ -982,7 +1669,13 @@
                     // Repository multi-select filter
                     const matchesRepoSelect = this.selectedRepos.size === 0 || this.selectedRepos.has(summary.repoName);
 
-                    return matchesSearch && matchesFilter && matchesDateRange && matchesRepoSelect;
+                    // Tags filter
+                    const matchesTags = this.activeTags.size === 0 || 
+                        Array.from(this.activeTags).every(activeTag => 
+                            summary.tags.some(tag => tag.value === activeTag)
+                        );
+
+                    return matchesSearch && matchesFilter && matchesDateRange && matchesRepoSelect && matchesTags;
                 });
 
                 this.renderSummaries();
@@ -1265,6 +1958,11 @@
                             <div class="repo-icon">${summary.repoName.charAt(0).toUpperCase()}</div>
                             ${summary.repoName}
                         </div>
+                        <div class="summary-tags">
+                            ${summary.tags.map(tag => `
+                                <span class="summary-tag ${tag.type}">${tag.label}</span>
+                            `).join('')}
+                        </div>
                         <div class="timestamp">${summary.displayDate}</div>
                         <a href="${summary.filename}" class="view-btn" target="_blank">
                             View Summary →
@@ -1273,6 +1971,33 @@
                 `).join('');
 
                 container.innerHTML = `<div class="summaries-grid">${summariesHTML}</div>`;
+            }
+
+            renderSidebar() {
+                this.renderRepositoryList();
+                this.renderTimeline();
+                this.renderRepoMultiSelect();
+                this.renderActivityChart();
+                this.renderSearchHistory();
+                this.renderSavedSearches();
+            }
+
+            updateFilterButtons() {
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.filter === this.currentFilter);
+                });
+            }
+
+            updateSortButtons() {
+                document.querySelectorAll('.sort-option').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.sort === this.currentSort);
+                });
+            }
+
+            updateRepoCheckboxes() {
+                document.querySelectorAll('#repoMultiSelect input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.checked = this.selectedRepos.has(checkbox.value);
+                });
             }
         }
 
