@@ -2908,7 +2908,2143 @@
     <button class="help-toggle" id="helpToggle" aria-label="Show help" title="Show help (F1)">?</button>
 
     <script>
+        // ===== DATA MANAGEMENT MODULE =====
+        class DataManager {
+            constructor() {
+                this.summaries = [];
+                this.rawSummaryFiles = [
+                    'doc/.config_2025_07_14_2025-07-14_21-28-43.html',
+                    'doc/commit_summery_2025_07_15_2025-07-15_01-39-54.html',
+                    'doc/oso_2025_01_14_20250714_235702.html',
+                    'doc/commit_summery_2025_07_15_2025-07-15_00-13-12.html',
+                    'doc/oso_2025_07_14_2025-07-14_23-22-35.html',
+                    'doc/.config_2025_07_14_2025-07-14_21-17-05.html',
+                    'doc/commit_summery_2025_07_15_2025-07-15_01-24-44.html',
+                    'doc/commit_summery_2025_07_15_2025-07-15_00-43-19.html',
+                    'doc/.config_2025_07_15_2025-07-15_00-49-12.html',
+                    'doc/commit_summery_2025_07_15_2025-07-15_01-08-32.html'
+                ];
+            }
+
+            async loadSummaries() {
+                console.log('DataManager: Loading summaries...');
+                try {
+                    this.summaries = this.rawSummaryFiles.map(file => {
+                        const filename = file.split('/').pop();
+                        const parts = filename.replace('.html', '').split('_');
+                        
+                        let repoName, dateStr, timeStr;
+                        if (parts.length >= 3) {
+                            repoName = parts[0];
+                            dateStr = parts.slice(1, 4).join('-');
+                            timeStr = parts.slice(4).join('_');
+                        } else {
+                            repoName = parts[0];
+                            dateStr = 'Unknown';
+                            timeStr = 'Unknown';
+                        }
+
+                        const timestamp = this.parseTimestamp(dateStr, timeStr);
+                        const tags = this.generateSummaryTags(repoName, timestamp, filename);
+                        
+                        return {
+                            filename: file,
+                            repoName: repoName,
+                            date: dateStr,
+                            time: timeStr,
+                            timestamp: timestamp,
+                            displayDate: this.formatDate(timestamp),
+                            tags: tags
+                        };
+                    });
+
+                    console.log(`DataManager: Loaded ${this.summaries.length} summaries`);
+                    return this.summaries;
+                } catch (error) {
+                    console.error('DataManager: Error loading summaries:', error);
+                    throw new Error('Failed to load commit summaries');
+                }
+            }
+
+            parseTimestamp(dateStr, timeStr) {
+                try {
+                    let parsedDate = null;
+                    
+                    if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                        const [year, month, day] = dateStr.split('-').map(Number);
+                        parsedDate = new Date(year, month - 1, day);
+                    } else if (dateStr.match(/^\d{4}_\d{2}_\d{2}$/)) {
+                        const [year, month, day] = dateStr.split('_').map(Number);
+                        parsedDate = new Date(year, month - 1, day);
+                    } else if (dateStr.match(/^\d{8}$/)) {
+                        const year = parseInt(dateStr.substring(0, 4));
+                        const month = parseInt(dateStr.substring(4, 6)) - 1;
+                        const day = parseInt(dateStr.substring(6, 8));
+                        parsedDate = new Date(year, month, day);
+                    } else if (dateStr.includes('_') || dateStr.includes('-')) {
+                        const parts = dateStr.split(/[_-]/);
+                        if (parts.length >= 3) {
+                            const nums = parts.map(p => parseInt(p)).filter(n => !isNaN(n));
+                            if (nums.length >= 3) {
+                                if (nums[0] > 1900) {
+                                    parsedDate = new Date(nums[0], nums[1] - 1, nums[2]);
+                                } else if (nums[2] > 1900) {
+                                    parsedDate = new Date(nums[2], nums[0] - 1, nums[1]);
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (parsedDate && !isNaN(parsedDate.getTime()) && timeStr && timeStr !== 'Unknown') {
+                        const timeResult = this.parseTimeString(timeStr);
+                        if (timeResult.hours !== null) {
+                            parsedDate.setHours(timeResult.hours, timeResult.minutes, timeResult.seconds);
+                        }
+                    }
+                    
+                    if (parsedDate && !isNaN(parsedDate.getTime())) {
+                        const now = new Date();
+                        const yearDiff = Math.abs(now.getFullYear() - parsedDate.getFullYear());
+                        if (yearDiff <= 10) {
+                            return parsedDate;
+                        }
+                    }
+                    
+                    const yearMatch = (dateStr + timeStr).match(/20\d{2}/);
+                    if (yearMatch) {
+                        const year = parseInt(yearMatch[0]);
+                        const fallbackDate = new Date();
+                        fallbackDate.setFullYear(year);
+                        return fallbackDate;
+                    }
+                    
+                    console.warn(`DataManager: Could not parse date: ${dateStr}, time: ${timeStr}`);
+                    return new Date();
+                    
+                } catch (e) {
+                    console.error(`DataManager: Error parsing timestamp: ${dateStr}, ${timeStr}`, e);
+                    return new Date();
+                }
+            }
+
+            parseTimeString(timeStr) {
+                const result = { hours: null, minutes: 0, seconds: 0 };
+                
+                try {
+                    const timeMatch = timeStr.match(/(\d{1,2})[_-](\d{2})[_-](\d{2})/);
+                    if (timeMatch) {
+                        result.hours = parseInt(timeMatch[1]);
+                        result.minutes = parseInt(timeMatch[2]);
+                        result.seconds = parseInt(timeMatch[3]);
+                        return result;
+                    }
+                    
+                    const compactTimeMatch = timeStr.match(/(\d{6})/);
+                    if (compactTimeMatch) {
+                        const timeStr6 = compactTimeMatch[1];
+                        result.hours = parseInt(timeStr6.substring(0, 2));
+                        result.minutes = parseInt(timeStr6.substring(2, 4));
+                        result.seconds = parseInt(timeStr6.substring(4, 6));
+                        return result;
+                    }
+                    
+                    const colonTimeMatch = timeStr.match(/(\d{1,2}):(\d{2}):(\d{2})/);
+                    if (colonTimeMatch) {
+                        result.hours = parseInt(colonTimeMatch[1]);
+                        result.minutes = parseInt(colonTimeMatch[2]);
+                        result.seconds = parseInt(colonTimeMatch[3]);
+                        return result;
+                    }
+                    
+                    const numbers = timeStr.match(/\d+/g);
+                    if (numbers && numbers.length >= 2) {
+                        const hour = parseInt(numbers[0]);
+                        const minute = parseInt(numbers[1]);
+                        if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
+                            result.hours = hour;
+                            result.minutes = minute;
+                            if (numbers.length >= 3) {
+                                const second = parseInt(numbers[2]);
+                                if (second >= 0 && second <= 59) {
+                                    result.seconds = second;
+                                }
+                            }
+                            return result;
+                        }
+                    }
+                    
+                } catch (e) {
+                    console.error(`DataManager: Error parsing time string: ${timeStr}`, e);
+                }
+                
+                return result;
+            }
+
+            formatDate(date) {
+                return date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+
+            generateSummaryTags(repoName, timestamp, filename) {
+                const tags = [];
+                
+                tags.push({ type: 'repo', value: repoName, label: `📁 ${repoName}` });
+                
+                const now = new Date();
+                const daysDiff = Math.floor((now - timestamp) / (1000 * 60 * 60 * 24));
+                
+                if (daysDiff === 0) tags.push({ type: 'time', value: 'today', label: '🕐 Today' });
+                else if (daysDiff === 1) tags.push({ type: 'time', value: 'yesterday', label: '🕐 Yesterday' });
+                else if (daysDiff <= 7) tags.push({ type: 'time', value: 'this-week', label: '📅 This Week' });
+                else if (daysDiff <= 30) tags.push({ type: 'time', value: 'this-month', label: '📅 This Month' });
+                
+                const year = timestamp.getFullYear();
+                const month = timestamp.toLocaleDateString('en-US', { month: 'long' });
+                tags.push({ type: 'time', value: `${year}`, label: `📅 ${year}` });
+                tags.push({ type: 'time', value: `${year}-${timestamp.getMonth() + 1}`, label: `📅 ${month} ${year}` });
+                
+                const natureTags = this.inferCommitNature(repoName, filename);
+                natureTags.forEach(tag => tags.push(tag));
+                
+                return tags;
+            }
+
+            inferCommitNature(repoName, filename) {
+                const tags = [];
+                
+                if (repoName === 'commit_summery') {
+                    tags.push({ type: 'nature', value: 'documentation', label: '📝 Documentation' });
+                    tags.push({ type: 'nature', value: 'automation', label: '🤖 Automation' });
+                } else if (repoName === '.config') {
+                    tags.push({ type: 'nature', value: 'configuration', label: '⚙️ Configuration' });
+                    tags.push({ type: 'nature', value: 'setup', label: '🔧 Setup' });
+                } else if (repoName === 'oso') {
+                    tags.push({ type: 'nature', value: 'development', label: '💻 Development' });
+                    tags.push({ type: 'nature', value: 'feature', label: '✨ Feature' });
+                }
+                
+                const dayOfWeek = new Date().getDay();
+                if (dayOfWeek === 0 || dayOfWeek === 6) {
+                    tags.push({ type: 'nature', value: 'weekend', label: '🏖️ Weekend' });
+                } else {
+                    tags.push({ type: 'nature', value: 'weekday', label: '💼 Weekday' });
+                }
+                
+                return tags;
+            }
+
+            getSummaries() {
+                return this.summaries;
+            }
+
+            getRepositories() {
+                return [...new Set(this.summaries.map(s => s.repoName))];
+            }
+
+            getSummariesByRepo(repoName) {
+                return this.summaries.filter(s => s.repoName === repoName);
+            }
+
+            getSummariesInDateRange(fromDate, toDate) {
+                const from = fromDate ? new Date(fromDate) : null;
+                const to = toDate ? new Date(toDate) : null;
+                
+                return this.summaries.filter(summary => {
+                    if (from && summary.timestamp < from) return false;
+                    if (to && summary.timestamp > to) return false;
+                    return true;
+                });
+            }
+        }
+
+        // ===== CONTENT PARSER MODULE =====
+        class ContentParser {
+            constructor() {
+                this.loadedContent = new Map();
+            }
+
+            async loadSummaryContent(summaries) {
+                console.log('ContentParser: Loading summary content...');
+                const loadPromises = summaries.map(async (summary) => {
+                    try {
+                        const response = await fetch(summary.filename);
+                        if (!response.ok) {
+                            console.warn(`ContentParser: Failed to load ${summary.filename}: ${response.status}`);
+                            return;
+                        }
+                        
+                        const html = await response.text();
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        
+                        const contentData = this.parseHTMLContent(doc, summary.filename);
+                        Object.assign(summary, contentData);
+                        
+                        this.loadedContent.set(summary.filename, contentData);
+                        
+                    } catch (error) {
+                        console.error(`ContentParser: Error loading content for ${summary.filename}:`, error);
+                    }
+                });
+                
+                await Promise.all(loadPromises);
+                console.log('ContentParser: Summary content loading completed');
+                return summaries;
+            }
+
+            parseHTMLContent(doc, filename) {
+                const contentData = {
+                    title: '',
+                    commitCount: 0,
+                    commits: [],
+                    totalInsertions: 0,
+                    totalDeletions: 0,
+                    filesChanged: 0,
+                    authors: new Set(),
+                    commitTypes: new Map(),
+                    languages: new Set()
+                };
+
+                try {
+                    contentData.title = doc.querySelector('title')?.textContent || '';
+                    
+                    const commitItems = doc.querySelectorAll('.commit-item, .commit-section');
+                    contentData.commitCount = commitItems.length;
+                    
+                    commitItems.forEach(commitItem => {
+                        const commit = this.parseCommitItem(commitItem);
+                        contentData.commits.push(commit);
+                        
+                        contentData.totalInsertions += commit.insertions;
+                        contentData.totalDeletions += commit.deletions;
+                        contentData.filesChanged += commit.filesChanged;
+                        
+                        if (commit.author) {
+                            contentData.authors.add(commit.author);
+                        }
+                        
+                        const commitType = this.extractCommitType(commit.message);
+                        if (commitType) {
+                            contentData.commitTypes.set(commitType, (contentData.commitTypes.get(commitType) || 0) + 1);
+                        }
+                    });
+                    
+                    this.extractLanguages(doc, contentData);
+                    
+                } catch (error) {
+                    console.error(`ContentParser: Error parsing HTML content for ${filename}:`, error);
+                }
+                
+                return contentData;
+            }
+
+            parseCommitItem(commitItem) {
+                const commit = {
+                    hash: '',
+                    message: '',
+                    author: '',
+                    date: '',
+                    insertions: 0,
+                    deletions: 0,
+                    filesChanged: 0
+                };
+                
+                const hashElement = commitItem.querySelector('.commit-hash, .hash-copyable, .meta-value');
+                if (hashElement) {
+                    commit.hash = hashElement.textContent.trim();
+                }
+                
+                const titleElement = commitItem.querySelector('.commit-title, .commit-header a');
+                if (titleElement) {
+                    commit.message = titleElement.textContent.trim();
+                }
+                
+                const authorElements = commitItem.querySelectorAll('.meta-value, .commit-meta span');
+                authorElements.forEach(el => {
+                    const text = el.textContent;
+                    if (text.includes('@') || text.includes('<')) {
+                        commit.author = text.trim();
+                    }
+                });
+                
+                const statsElements = commitItem.querySelectorAll('.stat, .meta-value');
+                statsElements.forEach(stat => {
+                    const text = stat.textContent.toLowerCase();
+                    if (text.includes('insertion')) {
+                        const match = text.match(/(\d+)/);
+                        if (match) commit.insertions = parseInt(match[1]);
+                    } else if (text.includes('deletion')) {
+                        const match = text.match(/(\d+)/);
+                        if (match) commit.deletions = parseInt(match[1]);
+                    } else if (text.includes('file')) {
+                        const match = text.match(/(\d+)/);
+                        if (match) commit.filesChanged = parseInt(match[1]);
+                    }
+                });
+                
+                return commit;
+            }
+
+            extractCommitType(message) {
+                const conventionalCommitPattern = /^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?:/i;
+                const match = message.match(conventionalCommitPattern);
+                return match ? match[1].toLowerCase() : 'other';
+            }
+
+            extractLanguages(doc, contentData) {
+                const tags = doc.querySelectorAll('.tag');
+                tags.forEach(tag => {
+                    const tagText = tag.textContent.toLowerCase();
+                    if (tagText.includes('rust')) contentData.languages.add('Rust');
+                    if (tagText.includes('javascript')) contentData.languages.add('JavaScript');
+                    if (tagText.includes('html')) contentData.languages.add('HTML');
+                    if (tagText.includes('css')) contentData.languages.add('CSS');
+                    if (tagText.includes('python')) contentData.languages.add('Python');
+                });
+            }
+
+            getLoadedContent(filename) {
+                return this.loadedContent.get(filename);
+            }
+        }
+
+        // ===== ANALYTICS ENGINE MODULE =====
+        class AnalyticsEngine {
+            constructor() {
+                this.analyticsData = {
+                    commitCounts: new Map(),
+                    repositoryStats: new Map(),
+                    timePatterns: new Map(),
+                    commitTypes: new Map(),
+                    healthMetrics: new Map()
+                };
+            }
+
+            generateAnalyticsData(summaries) {
+                console.log('AnalyticsEngine: Generating analytics data...');
+                
+                this.resetAnalyticsData();
+                
+                summaries.forEach(summary => {
+                    this.processSummaryForAnalytics(summary);
+                });
+                
+                this.calculateHealthMetrics();
+                
+                console.log('AnalyticsEngine: Analytics data generation completed');
+                return this.analyticsData;
+            }
+
+            resetAnalyticsData() {
+                this.analyticsData.commitCounts.clear();
+                this.analyticsData.repositoryStats.clear();
+                this.analyticsData.timePatterns.clear();
+                this.analyticsData.commitTypes.clear();
+                this.analyticsData.healthMetrics.clear();
+            }
+
+            processSummaryForAnalytics(summary) {
+                const dateKey = summary.timestamp.toDateString();
+                const repoName = summary.repoName;
+                const hour = summary.timestamp.getHours();
+                const dayOfWeek = summary.timestamp.getDay();
+                
+                // Commit counts by date
+                this.analyticsData.commitCounts.set(dateKey, 
+                    (this.analyticsData.commitCounts.get(dateKey) || 0) + (summary.commitCount || 1)
+                );
+                
+                // Repository statistics
+                this.updateRepositoryStats(repoName, summary);
+                
+                // Time patterns
+                this.updateTimePatterns(hour, dayOfWeek);
+                
+                // Commit types aggregation
+                if (summary.commitTypes) {
+                    summary.commitTypes.forEach((count, type) => {
+                        this.analyticsData.commitTypes.set(type, 
+                            (this.analyticsData.commitTypes.get(type) || 0) + count
+                        );
+                    });
+                }
+            }
+
+            updateRepositoryStats(repoName, summary) {
+                if (!this.analyticsData.repositoryStats.has(repoName)) {
+                    this.analyticsData.repositoryStats.set(repoName, {
+                        summaries: 0,
+                        totalCommits: 0,
+                        totalInsertions: 0,
+                        totalDeletions: 0,
+                        filesChanged: 0,
+                        authors: new Set(),
+                        languages: new Set(),
+                        commitTypes: new Map(),
+                        lastActivity: summary.timestamp
+                    });
+                }
+                
+                const repoStats = this.analyticsData.repositoryStats.get(repoName);
+                repoStats.summaries++;
+                repoStats.totalCommits += summary.commitCount || 1;
+                repoStats.totalInsertions += summary.totalInsertions || 0;
+                repoStats.totalDeletions += summary.totalDeletions || 0;
+                repoStats.filesChanged += summary.filesChanged || 0;
+                
+                if (summary.authors) {
+                    summary.authors.forEach(author => repoStats.authors.add(author));
+                }
+                
+                if (summary.languages) {
+                    summary.languages.forEach(lang => repoStats.languages.add(lang));
+                }
+                
+                if (summary.commitTypes) {
+                    summary.commitTypes.forEach((count, type) => {
+                        repoStats.commitTypes.set(type, (repoStats.commitTypes.get(type) || 0) + count);
+                    });
+                }
+                
+                if (summary.timestamp > repoStats.lastActivity) {
+                    repoStats.lastActivity = summary.timestamp;
+                }
+            }
+
+            updateTimePatterns(hour, dayOfWeek) {
+                const hourKey = `hour-${hour}`;
+                const dayKey = `day-${dayOfWeek}`;
+                
+                this.analyticsData.timePatterns.set(hourKey,
+                    (this.analyticsData.timePatterns.get(hourKey) || 0) + 1
+                );
+                
+                this.analyticsData.timePatterns.set(dayKey,
+                    (this.analyticsData.timePatterns.get(dayKey) || 0) + 1
+                );
+            }
+
+            calculateHealthMetrics() {
+                this.analyticsData.repositoryStats.forEach((stats, repoName) => {
+                    const now = new Date();
+                    const daysSinceLastActivity = Math.floor((now - stats.lastActivity) / (1000 * 60 * 60 * 24));
+                    
+                    const activityScore = Math.max(0, 100 - (daysSinceLastActivity * 2));
+                    const avgCommitsPerSummary = stats.totalCommits / stats.summaries;
+                    const consistencyScore = Math.min(100, avgCommitsPerSummary * 20);
+                    const diversityScore = Math.min(100, stats.commitTypes.size * 15);
+                    const overallHealth = (activityScore + consistencyScore + diversityScore) / 3;
+                    
+                    this.analyticsData.healthMetrics.set(repoName, {
+                        overall: overallHealth,
+                        activity: activityScore,
+                        consistency: consistencyScore,
+                        diversity: diversityScore,
+                        daysSinceLastActivity,
+                        avgCommitsPerSummary: avgCommitsPerSummary.toFixed(1)
+                    });
+                });
+            }
+
+            getAnalyticsData() {
+                return this.analyticsData;
+            }
+
+            getRepositoryStats() {
+                return this.analyticsData.repositoryStats;
+            }
+
+            getHealthMetrics() {
+                return this.analyticsData.healthMetrics;
+            }
+
+            getCommitCounts() {
+                return this.analyticsData.commitCounts;
+            }
+
+            getTimePatterns() {
+                return this.analyticsData.timePatterns;
+            }
+
+            getCommitTypes() {
+                return this.analyticsData.commitTypes;
+            }
+        }
+
+        // ===== CHART MANAGER MODULE =====
+        class ChartManager {
+            constructor(analyticsEngine) {
+                this.analyticsEngine = analyticsEngine;
+                this.charts = {};
+            }
+
+            initializeAllCharts() {
+                console.log('ChartManager: Initializing all charts...');
+                
+                this.createCommitTrendChart();
+                this.createRepositoryActivityChart();
+                this.createTimeDistributionChart();
+                this.createContributionHeatmap();
+                this.createWeeklyPatternChart();
+                this.createCommitTypeChart();
+                
+                console.log('ChartManager: All charts initialized');
+            }
+
+            createCommitTrendChart(timeframe = '30d') {
+                const ctx = document.getElementById('commitTrendChart').getContext('2d');
+                
+                const days = timeframe === '7d' ? 7 : timeframe === '90d' ? 90 : timeframe === '1y' ? 365 : 30;
+                const chartData = this.prepareCommitTrendData(days);
+                
+                if (this.charts.commitTrend) {
+                    this.charts.commitTrend.destroy();
+                }
+                
+                this.charts.commitTrend = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: chartData.map(d => d.date),
+                        datasets: [{
+                            label: 'Commits',
+                            data: chartData.map(d => d.commits),
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#667eea',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 5,
+                            pointHoverRadius: 8
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                titleColor: '#fff',
+                                bodyColor: '#fff',
+                                borderColor: '#667eea',
+                                borderWidth: 1
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(0, 0, 0, 0.1)' },
+                                ticks: { stepSize: 1 }
+                            },
+                            x: { grid: { display: false } }
+                        },
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        }
+                    }
+                });
+            }
+
+            prepareCommitTrendData(days) {
+                const data = [];
+                const today = new Date();
+                const commitCounts = this.analyticsEngine.getCommitCounts();
+                
+                for (let i = days - 1; i >= 0; i--) {
+                    const date = new Date(today);
+                    date.setDate(date.getDate() - i);
+                    const dateKey = date.toDateString();
+                    const commits = commitCounts.get(dateKey) || 0;
+                    
+                    data.push({
+                        date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                        commits: commits
+                    });
+                }
+                
+                return data;
+            }
+
+            createRepositoryActivityChart(type = 'pie') {
+                const ctx = document.getElementById('repoActivityChart').getContext('2d');
+                
+                const repoStats = this.analyticsEngine.getRepositoryStats();
+                const repoData = Array.from(repoStats.entries())
+                    .map(([repo, stats]) => ({
+                        repo: repo,
+                        commits: stats.totalCommits,
+                        summaries: stats.summaries
+                    }))
+                    .sort((a, b) => b.commits - a.commits);
+                
+                const colors = [
+                    '#667eea', '#764ba2', '#28a745', '#ffc107', 
+                    '#dc3545', '#17a2b8', '#6f42c1', '#fd7e14'
+                ];
+                
+                if (this.charts.repoActivity) {
+                    this.charts.repoActivity.destroy();
+                }
+                
+                this.charts.repoActivity = new Chart(ctx, {
+                    type: type,
+                    data: {
+                        labels: repoData.map(d => d.repo),
+                        datasets: [{
+                            data: repoData.map(d => d.commits),
+                            backgroundColor: colors.slice(0, repoData.length),
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const repo = repoData[context.dataIndex];
+                                        return `${repo.repo}: ${repo.commits} commits (${repo.summaries} summaries)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            createTimeDistributionChart(patternType = 'both') {
+                const ctx = document.getElementById('timeDistributionChart').getContext('2d');
+                const timePatterns = this.analyticsEngine.getTimePatterns();
+                
+                let chartData, labels;
+                
+                if (patternType === 'hourly') {
+                    labels = Array.from({length: 24}, (_, i) => `${i}:00`);
+                    chartData = [];
+                    for (let hour = 0; hour < 24; hour++) {
+                        chartData.push(timePatterns.get(`hour-${hour}`) || 0);
+                    }
+                } else if (patternType === 'daily') {
+                    labels = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                    chartData = [];
+                    for (let day = 0; day < 7; day++) {
+                        chartData.push(timePatterns.get(`day-${day}`) || 0);
+                    }
+                } else {
+                    labels = Array.from({length: 24}, (_, i) => `${i}:00`);
+                    chartData = [];
+                    for (let hour = 0; hour < 24; hour++) {
+                        chartData.push(timePatterns.get(`hour-${hour}`) || 0);
+                    }
+                }
+                
+                if (this.charts.timeDistribution) {
+                    this.charts.timeDistribution.destroy();
+                }
+                
+                this.charts.timeDistribution = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: `Commits by ${patternType === 'daily' ? 'Day' : 'Hour'}`,
+                            data: chartData,
+                            backgroundColor: 'rgba(102, 126, 234, 0.6)',
+                            borderColor: '#667eea',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: true, position: 'top' },
+                            tooltip: {
+                                callbacks: {
+                                    title: function(context) {
+                                        return `${patternType === 'daily' ? 'Day' : 'Hour'} ${context[0].label}`;
+                                    },
+                                    label: function(context) {
+                                        return `${context.parsed.y} commits`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { stepSize: 1 }
+                            }
+                        }
+                    }
+                });
+            }
+
+            createContributionHeatmap(year = 2025) {
+                const container = document.getElementById('contributionHeatmap');
+                const commitCounts = this.analyticsEngine.getCommitCounts();
+                
+                let heatmapHTML = `<div class="heatmap-year-label" style="text-align: center; margin-bottom: 15px; font-weight: 600; color: #333;">Contribution Activity in ${year}</div>`;
+                heatmapHTML += '<div class="heatmap-grid">';
+                
+                const startDate = new Date(year, 0, 1);
+                const endDate = new Date(year, 11, 31);
+                const maxCommits = Math.max(...Array.from(commitCounts.values()), 1);
+                
+                for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                    const dateKey = d.toDateString();
+                    const commits = commitCounts.get(dateKey) || 0;
+                    const level = commits === 0 ? 0 : Math.min(4, Math.ceil((commits / maxCommits) * 4));
+                    
+                    heatmapHTML += `<div class="heatmap-cell level-${level}" 
+                                        data-date="${dateKey}" 
+                                        data-commits="${commits}"
+                                        title="${d.toLocaleDateString()}: ${commits} commits"></div>`;
+                }
+                
+                heatmapHTML += '</div>';
+                heatmapHTML += `
+                    <div class="heatmap-legend">
+                        <span>Less</span>
+                        <div class="heatmap-legend-item"><div class="heatmap-legend-color level-0"></div></div>
+                        <div class="heatmap-legend-item"><div class="heatmap-legend-color level-1"></div></div>
+                        <div class="heatmap-legend-item"><div class="heatmap-legend-color level-2"></div></div>
+                        <div class="heatmap-legend-item"><div class="heatmap-legend-color level-3"></div></div>
+                        <div class="heatmap-legend-item"><div class="heatmap-legend-color level-4"></div></div>
+                        <span>More</span>
+                    </div>
+                `;
+                
+                container.innerHTML = heatmapHTML;
+            }
+
+            createWeeklyPatternChart(metric = 'commits') {
+                const ctx = document.getElementById('weeklyPatternChart').getContext('2d');
+                const timePatterns = this.analyticsEngine.getTimePatterns();
+                
+                const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                const weeklyData = [];
+                
+                for (let day = 0; day < 7; day++) {
+                    const commits = timePatterns.get(`day-${day}`) || 0;
+                    weeklyData.push(commits);
+                }
+                
+                if (this.charts.weeklyPattern) {
+                    this.charts.weeklyPattern.destroy();
+                }
+                
+                this.charts.weeklyPattern = new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: dayNames,
+                        datasets: [{
+                            label: `${metric.charAt(0).toUpperCase() + metric.slice(1)} by Day`,
+                            data: weeklyData,
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                            borderWidth: 2,
+                            pointBackgroundColor: '#667eea',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 5
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            r: {
+                                beginAtZero: true,
+                                ticks: { stepSize: 1 }
+                            }
+                        }
+                    }
+                });
+            }
+
+            createCommitTypeChart() {
+                const ctx = document.getElementById('commitTypeChart').getContext('2d');
+                const commitTypes = this.analyticsEngine.getCommitTypes();
+                
+                const commitTypeData = Array.from(commitTypes.entries()).sort((a, b) => b[1] - a[1]);
+                
+                const typeColors = {
+                    'feat': '#28a745', 'fix': '#dc3545', 'docs': '#17a2b8',
+                    'style': '#6f42c1', 'refactor': '#fd7e14', 'test': '#ffc107',
+                    'chore': '#6c757d', 'perf': '#e83e8c', 'other': '#495057'
+                };
+                
+                if (this.charts.commitType) {
+                    this.charts.commitType.destroy();
+                }
+                
+                this.charts.commitType = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: commitTypeData.map(([type]) => type.charAt(0).toUpperCase() + type.slice(1)),
+                        datasets: [{
+                            data: commitTypeData.map(([, count]) => count),
+                            backgroundColor: commitTypeData.map(([type]) => typeColors[type] || typeColors.other),
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { padding: 15, usePointStyle: true }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                        return `${context.label}: ${context.parsed} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            updateChart(chartName, ...args) {
+                switch (chartName) {
+                    case 'commitTrend':
+                        this.createCommitTrendChart(...args);
+                        break;
+                    case 'repoActivity':
+                        this.createRepositoryActivityChart(...args);
+                        break;
+                    case 'timeDistribution':
+                        this.createTimeDistributionChart(...args);
+                        break;
+                    case 'contributionHeatmap':
+                        this.createContributionHeatmap(...args);
+                        break;
+                    case 'weeklyPattern':
+                        this.createWeeklyPatternChart(...args);
+                        break;
+                    case 'commitType':
+                        this.createCommitTypeChart(...args);
+                        break;
+                }
+            }
+
+            getChart(chartName) {
+                return this.charts[chartName];
+            }
+
+            destroyAllCharts() {
+                Object.values(this.charts).forEach(chart => {
+                    if (chart && typeof chart.destroy === 'function') {
+                        chart.destroy();
+                    }
+                });
+                this.charts = {};
+            }
+        }
+
+        // ===== FILTER MANAGER MODULE =====
+        class FilterManager {
+            constructor() {
+                this.currentFilter = 'all';
+                this.searchTerm = '';
+                this.currentSort = 'newest';
+                this.dateFrom = '';
+                this.dateTo = '';
+                this.selectedRepos = new Set();
+                this.activeTags = new Set();
+                this.searchHistory = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+                this.savedSearches = JSON.parse(localStorage.getItem('savedSearches') || '[]');
+            }
+
+            filterSummaries(summaries) {
+                return summaries.filter(summary => {
+                    return this.matchesSearch(summary) &&
+                           this.matchesFilter(summary) &&
+                           this.matchesDateRange(summary) &&
+                           this.matchesRepoSelect(summary) &&
+                           this.matchesTags(summary);
+                });
+            }
+
+            matchesSearch(summary) {
+                if (!this.searchTerm) return true;
+                
+                return summary.repoName.toLowerCase().includes(this.searchTerm) ||
+                       summary.date.toLowerCase().includes(this.searchTerm) ||
+                       summary.displayDate.toLowerCase().includes(this.searchTerm) ||
+                       summary.tags.some(tag => 
+                           tag.value.toLowerCase().includes(this.searchTerm) ||
+                           tag.label.toLowerCase().includes(this.searchTerm)
+                       );
+            }
+
+            matchesFilter(summary) {
+                if (this.currentFilter === 'all') return true;
+                
+                if (this.currentFilter === 'recent') {
+                    const weekAgo = new Date();
+                    weekAgo.setDate(weekAgo.getDate() - 7);
+                    return summary.timestamp >= weekAgo;
+                }
+                
+                return summary.repoName === this.currentFilter;
+            }
+
+            matchesDateRange(summary) {
+                let matches = true;
+                
+                if (this.dateFrom) {
+                    const fromDate = new Date(this.dateFrom);
+                    matches = matches && summary.timestamp >= fromDate;
+                }
+                
+                if (this.dateTo) {
+                    const toDate = new Date(this.dateTo);
+                    toDate.setHours(23, 59, 59, 999);
+                    matches = matches && summary.timestamp <= toDate;
+                }
+                
+                return matches;
+            }
+
+            matchesRepoSelect(summary) {
+                return this.selectedRepos.size === 0 || this.selectedRepos.has(summary.repoName);
+            }
+
+            matchesTags(summary) {
+                if (this.activeTags.size === 0) return true;
+                
+                return Array.from(this.activeTags).every(activeTag => 
+                    summary.tags.some(tag => tag.value === activeTag)
+                );
+            }
+
+            applySorting(summaries) {
+                const sortFunction = this.getSortFunction();
+                return [...summaries].sort(sortFunction);
+            }
+
+            getSortFunction() {
+                switch (this.currentSort) {
+                    case 'newest':
+                        return (a, b) => b.timestamp - a.timestamp;
+                    case 'oldest':
+                        return (a, b) => a.timestamp - b.timestamp;
+                    case 'repo':
+                        return (a, b) => a.repoName.localeCompare(b.repoName);
+                    case 'activity':
+                        return (a, b) => {
+                            const countA = a.commitCount || 1;
+                            const countB = b.commitCount || 1;
+                            if (countA !== countB) return countB - countA;
+                            return b.timestamp - a.timestamp;
+                        };
+                    case 'alphabetical':
+                        return (a, b) => {
+                            const repoCompare = a.repoName.localeCompare(b.repoName);
+                            if (repoCompare !== 0) return repoCompare;
+                            return b.timestamp - a.timestamp;
+                        };
+                    default:
+                        return (a, b) => b.timestamp - a.timestamp;
+                }
+            }
+
+            parseSearchQuery(query) {
+                const result = {
+                    repo: null,
+                    date: null,
+                    tags: [],
+                    text: ''
+                };
+                
+                const parts = query.split(/\s+/);
+                const textParts = [];
+                
+                parts.forEach(part => {
+                    if (part.startsWith('repo:')) {
+                        result.repo = part.substring(5);
+                    } else if (part.startsWith('date:')) {
+                        result.date = part.substring(5);
+                    } else if (part.startsWith('tag:')) {
+                        result.tags.push(part.substring(4));
+                    } else if (part === 'recent') {
+                        result.date = 'recent';
+                    } else {
+                        textParts.push(part);
+                    }
+                });
+                
+                result.text = textParts.join(' ');
+                return result;
+            }
+
+            addToSearchHistory(term) {
+                if (!term || term.length < 2) return;
+                
+                this.searchHistory = this.searchHistory.filter(item => item !== term);
+                this.searchHistory.unshift(term);
+                this.searchHistory = this.searchHistory.slice(0, 5);
+                
+                localStorage.setItem('searchHistory', JSON.stringify(this.searchHistory));
+            }
+
+            saveCurrentSearch() {
+                const searchState = {
+                    term: this.searchTerm,
+                    filter: this.currentFilter,
+                    dateFrom: this.dateFrom,
+                    dateTo: this.dateTo,
+                    selectedRepos: Array.from(this.selectedRepos),
+                    sort: this.currentSort,
+                    name: `Search ${this.savedSearches.length + 1}`,
+                    timestamp: new Date().toISOString()
+                };
+
+                this.savedSearches.unshift(searchState);
+                this.savedSearches = this.savedSearches.slice(0, 10);
+                
+                localStorage.setItem('savedSearches', JSON.stringify(this.savedSearches));
+            }
+
+            applySavedSearch(search) {
+                this.searchTerm = search.term;
+                this.currentFilter = search.filter;
+                this.dateFrom = search.dateFrom;
+                this.dateTo = search.dateTo;
+                this.selectedRepos = new Set(search.selectedRepos);
+                this.currentSort = search.sort;
+            }
+
+            // Getters and setters
+            setSearchTerm(term) { this.searchTerm = term.toLowerCase(); }
+            setCurrentFilter(filter) { this.currentFilter = filter; }
+            setCurrentSort(sort) { this.currentSort = sort; }
+            setDateRange(from, to) { this.dateFrom = from; this.dateTo = to; }
+            
+            getSearchTerm() { return this.searchTerm; }
+            getCurrentFilter() { return this.currentFilter; }
+            getCurrentSort() { return this.currentSort; }
+            getDateRange() { return { from: this.dateFrom, to: this.dateTo }; }
+            getActiveTags() { return this.activeTags; }
+            getSelectedRepos() { return this.selectedRepos; }
+            getSearchHistory() { return this.searchHistory; }
+            getSavedSearches() { return this.savedSearches; }
+        }
+
+        // ===== UI RENDERER MODULE =====
+        class UIRenderer {
+            constructor() {
+                this.currentPage = 1;
+                this.itemsPerPage = 10;
+                this.totalPages = 1;
+            }
+
+            renderSummaries(summaries, analyticsEngine) {
+                const container = document.getElementById('summariesContainer');
+                
+                if (summaries.length === 0) {
+                    container.innerHTML = '<div class="no-results">No commit summaries found matching your criteria.</div>';
+                    this.updatePagination(summaries);
+                    return;
+                }
+
+                const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+                const endIndex = startIndex + this.itemsPerPage;
+                const paginatedSummaries = summaries.slice(startIndex, endIndex);
+
+                const summariesHTML = paginatedSummaries.map(summary => this.renderSummaryCard(summary)).join('');
+                container.innerHTML = `<div class="summaries-grid">${summariesHTML}</div>`;
+                
+                this.updatePagination(summaries);
+            }
+
+            renderSummaryCard(summary) {
+                const commitInfo = summary.commitCount ? 
+                    `<div class="summary-stats">
+                        <span class="stat-item">📝 ${summary.commitCount} commits</span>
+                        ${summary.totalInsertions ? `<span class="stat-item">+${summary.totalInsertions}</span>` : ''}
+                        ${summary.totalDeletions ? `<span class="stat-item">-${summary.totalDeletions}</span>` : ''}
+                        ${summary.filesChanged ? `<span class="stat-item">📄 ${summary.filesChanged} files</span>` : ''}
+                    </div>` : '';
+                
+                const authorsInfo = summary.authors && summary.authors.size > 0 ? 
+                    `<div class="summary-authors">👥 ${Array.from(summary.authors).slice(0, 2).join(', ')}${summary.authors.size > 2 ? ` +${summary.authors.size - 2} more` : ''}</div>` : '';
+                
+                const languagesInfo = summary.languages && summary.languages.size > 0 ?
+                    `<div class="summary-languages">${Array.from(summary.languages).map(lang => `<span class="lang-tag">${lang}</span>`).join('')}</div>` : '';
+
+                return `
+                    <div class="summary-card">
+                        <div class="repo-name">
+                            <div class="repo-icon">${summary.repoName.charAt(0).toUpperCase()}</div>
+                            ${summary.repoName}
+                        </div>
+                        <div class="summary-tags">
+                            ${summary.tags.map(tag => `
+                                <span class="summary-tag ${tag.type}">${tag.label}</span>
+                            `).join('')}
+                        </div>
+                        ${commitInfo}
+                        ${authorsInfo}
+                        ${languagesInfo}
+                        <div class="timestamp">${summary.displayDate}</div>
+                        <a href="${summary.filename}" class="view-btn" target="_blank">
+                            View Summary →
+                        </a>
+                    </div>
+                `;
+            }
+
+            updatePagination(summaries) {
+                const totalItems = summaries.length;
+                this.totalPages = Math.ceil(totalItems / this.itemsPerPage);
+                
+                const paginationContainer = document.getElementById('paginationContainer');
+                const paginationNumbers = document.getElementById('paginationNumbers');
+                const paginationInfo = document.getElementById('paginationInfo');
+                const prevBtn = document.getElementById('prevPage');
+                const nextBtn = document.getElementById('nextPage');
+                
+                if (totalItems === 0) {
+                    paginationContainer.style.display = 'none';
+                    return;
+                }
+                
+                paginationContainer.style.display = 'flex';
+                
+                prevBtn.disabled = this.currentPage === 1;
+                nextBtn.disabled = this.currentPage === this.totalPages;
+                
+                this.renderPageNumbers(paginationNumbers);
+                
+                const startItem = (this.currentPage - 1) * this.itemsPerPage + 1;
+                const endItem = Math.min(this.currentPage * this.itemsPerPage, totalItems);
+                paginationInfo.textContent = `Showing ${startItem}-${endItem} of ${totalItems} summaries`;
+            }
+
+            renderPageNumbers(container) {
+                let numbersHTML = '';
+                const maxVisiblePages = 5;
+                let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+                let endPage = Math.min(this.totalPages, startPage + maxVisiblePages - 1);
+                
+                if (endPage - startPage < maxVisiblePages - 1) {
+                    startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                }
+                
+                for (let i = startPage; i <= endPage; i++) {
+                    numbersHTML += `
+                        <button class="pagination-btn ${i === this.currentPage ? 'active' : ''}" 
+                                data-page="${i}">${i}</button>
+                    `;
+                }
+                
+                container.innerHTML = numbersHTML;
+            }
+
+            renderHealthMetrics(analyticsEngine) {
+                const healthGrid = document.getElementById('healthMetrics');
+                const healthMetrics = analyticsEngine.getHealthMetrics();
+                
+                let healthHTML = '';
+                
+                healthMetrics.forEach((metrics, repoName) => {
+                    const healthClass = metrics.overall >= 80 ? 'excellent' : 
+                                       metrics.overall >= 60 ? 'good' : 'needs-attention';
+                    
+                    const healthEmoji = metrics.overall >= 80 ? '🟢' : 
+                                       metrics.overall >= 60 ? '🟡' : '🔴';
+                    
+                    const trend = metrics.daysSinceLastActivity <= 7 ? 'trend-up' : 
+                                 metrics.daysSinceLastActivity <= 30 ? 'trend-stable' : 'trend-down';
+                    
+                    const trendEmoji = trend === 'trend-up' ? '📈' : 
+                                      trend === 'trend-stable' ? '📊' : '📉';
+                    
+                    healthHTML += `
+                        <div class="health-card ${healthClass}">
+                            <div class="health-title">
+                                ${healthEmoji} ${repoName}
+                            </div>
+                            <div class="health-value ${healthClass}">
+                                ${Math.round(metrics.overall)}%
+                            </div>
+                            <div class="health-description">
+                                Activity: ${Math.round(metrics.activity)}% | 
+                                Consistency: ${Math.round(metrics.consistency)}% | 
+                                Diversity: ${Math.round(metrics.diversity)}%
+                            </div>
+                            <div class="health-trend ${trend}">
+                                ${trendEmoji} ${metrics.daysSinceLastActivity} days since last activity
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                healthGrid.innerHTML = healthHTML;
+            }
+
+            updateStats(summaries) {
+                const repos = [...new Set(summaries.map(s => s.repoName))];
+                const thisMonth = new Date();
+                thisMonth.setDate(1);
+                const thisMonthCount = summaries.filter(s => s.timestamp >= thisMonth).length;
+                const latestSummary = summaries[0];
+                
+                const totalCommits = summaries.reduce((sum, s) => sum + (s.commitCount || 1), 0);
+                const avgCommitsPerSummary = summaries.length > 0 ? (totalCommits / summaries.length).toFixed(1) : '0';
+
+                document.getElementById('totalSummaries').textContent = summaries.length;
+                document.getElementById('totalRepos').textContent = repos.length;
+                document.getElementById('latestDate').textContent = latestSummary ? 
+                    latestSummary.timestamp.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'N/A';
+                document.getElementById('thisMonth').textContent = thisMonthCount;
+                document.getElementById('totalCommits').textContent = totalCommits;
+                document.getElementById('avgCommitsPerSummary').textContent = avgCommitsPerSummary;
+            }
+
+            showSuccess(message) {
+                const container = document.getElementById('summariesContainer');
+                const successDiv = document.createElement('div');
+                successDiv.className = 'success-message';
+                successDiv.textContent = message;
+                container.insertBefore(successDiv, container.firstChild);
+                
+                setTimeout(() => {
+                    successDiv.remove();
+                }, 3000);
+            }
+
+            showError(message) {
+                const container = document.getElementById('summariesContainer');
+                container.innerHTML = `<div class="error-message">${message}</div>`;
+            }
+
+            // Pagination controls
+            setCurrentPage(page) { this.currentPage = page; }
+            getCurrentPage() { return this.currentPage; }
+            getTotalPages() { return this.totalPages; }
+            getItemsPerPage() { return this.itemsPerPage; }
+        }
+
+        // ===== GITHUB INTEGRATION MODULE =====
+        class GitHubIntegration {
+            constructor() {
+                this.githubToken = localStorage.getItem('githubToken') || '';
+                this.githubData = new Map();
+            }
+
+            async loadGitHubData(repositories) {
+                if (!this.githubToken) return;
+                
+                console.log('GitHubIntegration: Loading GitHub data...');
+                
+                try {
+                    const repoPromises = repositories.map(repo => this.fetchGitHubRepoData(repo));
+                    const repoDataArray = await Promise.all(repoPromises);
+                    
+                    repoDataArray.forEach(repoData => {
+                        if (repoData) {
+                            this.githubData.set(repoData.name, repoData);
+                        }
+                    });
+                    
+                    console.log(`GitHubIntegration: Loaded data for ${this.githubData.size} repositories`);
+                    return this.githubData;
+                    
+                } catch (error) {
+                    console.error('GitHubIntegration: Error loading GitHub data:', error);
+                    throw error;
+                }
+            }
+
+            async fetchGitHubRepoData(repoName) {
+                try {
+                    const possiblePaths = [
+                        `sugiura-hiromiti/${repoName}`,
+                        `sugiura-hiromiti/${repoName.replace('.', '')}`,
+                        `hiromichi-sugiura/${repoName}`
+                    ];
+                    
+                    for (const repoPath of possiblePaths) {
+                        try {
+                            const response = await fetch(`https://api.github.com/repos/${repoPath}`, {
+                                headers: {
+                                    'Authorization': `token ${this.githubToken}`,
+                                    'Accept': 'application/vnd.github.v3+json'
+                                }
+                            });
+                            
+                            if (response.ok) {
+                                const repoData = await response.json();
+                                
+                                const languagesResponse = await fetch(repoData.languages_url, {
+                                    headers: {
+                                        'Authorization': `token ${this.githubToken}`,
+                                        'Accept': 'application/vnd.github.v3+json'
+                                    }
+                                });
+                                
+                                const languages = languagesResponse.ok ? await languagesResponse.json() : {};
+                                
+                                return {
+                                    name: repoData.name,
+                                    fullName: repoData.full_name,
+                                    description: repoData.description,
+                                    stars: repoData.stargazers_count,
+                                    forks: repoData.forks_count,
+                                    issues: repoData.open_issues_count,
+                                    language: repoData.language,
+                                    languages: Object.keys(languages),
+                                    lastPush: new Date(repoData.pushed_at),
+                                    url: repoData.html_url
+                                };
+                            }
+                        } catch (e) {
+                            continue;
+                        }
+                    }
+                    
+                    return null;
+                } catch (error) {
+                    console.error(`GitHubIntegration: Error fetching data for ${repoName}:`, error);
+                    return null;
+                }
+            }
+
+            renderGitHubStats() {
+                const githubStats = document.getElementById('githubStats');
+                const githubSetup = document.getElementById('githubSetup');
+                
+                if (this.githubData.size === 0) {
+                    githubSetup.style.display = 'block';
+                    githubStats.style.display = 'none';
+                    return;
+                }
+                
+                githubSetup.style.display = 'none';
+                githubStats.style.display = 'block';
+                
+                let githubHTML = '';
+                this.githubData.forEach(repoData => {
+                    githubHTML += this.renderGitHubRepoCard(repoData);
+                });
+                
+                githubStats.innerHTML = githubHTML;
+            }
+
+            renderGitHubRepoCard(repoData) {
+                const languageColors = {
+                    'JavaScript': '#f1e05a', 'TypeScript': '#2b7489', 'Python': '#3572A5',
+                    'Rust': '#dea584', 'HTML': '#e34c26', 'CSS': '#563d7c', 'Shell': '#89e051'
+                };
+                
+                const languagesHTML = repoData.languages.map(lang => 
+                    `<span class="github-language" style="background-color: ${languageColors[lang] || '#e9ecef'}">${lang}</span>`
+                ).join('');
+                
+                return `
+                    <div class="github-repo-card">
+                        <div class="github-repo-header">
+                            <div class="github-repo-name">
+                                <span>📁</span>
+                                <a href="${repoData.url}" target="_blank">${repoData.name}</a>
+                            </div>
+                        </div>
+                        
+                        <div class="github-repo-stats">
+                            <div class="github-stat-item">
+                                <div class="github-stat-number">⭐ ${repoData.stars}</div>
+                                <div class="github-stat-label">Stars</div>
+                            </div>
+                            <div class="github-stat-item">
+                                <div class="github-stat-number">🍴 ${repoData.forks}</div>
+                                <div class="github-stat-label">Forks</div>
+                            </div>
+                            <div class="github-stat-item">
+                                <div class="github-stat-number">🐛 ${repoData.issues}</div>
+                                <div class="github-stat-label">Issues</div>
+                            </div>
+                        </div>
+                        
+                        ${repoData.description ? `<p style="color: #666; margin-bottom: 15px; font-size: 0.9rem;">${repoData.description}</p>` : ''}
+                        
+                        <div class="github-languages">
+                            ${languagesHTML}
+                        </div>
+                        
+                        <div style="margin-top: 10px; font-size: 0.8rem; color: #666;">
+                            Last push: ${repoData.lastPush.toLocaleDateString()}
+                        </div>
+                    </div>
+                `;
+            }
+
+            setToken(token) {
+                this.githubToken = token;
+                localStorage.setItem('githubToken', token);
+            }
+
+            getToken() {
+                return this.githubToken;
+            }
+
+            hasToken() {
+                return !!this.githubToken;
+            }
+
+            getGitHubData() {
+                return this.githubData;
+            }
+        }
+
+        // ===== MAIN DASHBOARD CLASS (REFACTORED) =====
         class CommitSummaryDashboard {
+            constructor() {
+                // Initialize all modules
+                this.dataManager = new DataManager();
+                this.contentParser = new ContentParser();
+                this.analyticsEngine = new AnalyticsEngine();
+                this.chartManager = new ChartManager(this.analyticsEngine);
+                this.filterManager = new FilterManager();
+                this.uiRenderer = new UIRenderer();
+                this.githubIntegration = new GitHubIntegration();
+                
+                // Data properties
+                this.summaries = [];
+                this.filteredSummaries = [];
+                this.allTags = new Set();
+                
+                // Calendar properties (keeping existing calendar functionality)
+                this.currentCalendarDate = new Date();
+                this.selectedDates = new Set();
+                this.calendarView = 'month';
+                this.activityData = new Map();
+                this.streakData = { current: 0, longest: 0 };
+                
+                console.log('CommitSummaryDashboard: Initialized with modular architecture');
+                this.init();
+            }
+
+            async init() {
+                try {
+                    console.log('CommitSummaryDashboard: Starting initialization...');
+                    
+                    // Load and process data
+                    this.summaries = await this.dataManager.loadSummaries();
+                    await this.contentParser.loadSummaryContent(this.summaries);
+                    
+                    // Generate analytics and activity data
+                    this.analyticsEngine.generateAnalyticsData(this.summaries);
+                    this.generateTags();
+                    this.generateActivityData();
+                    
+                    // Setup UI
+                    this.setupEventListeners();
+                    this.uiRenderer.updateStats(this.summaries);
+                    this.filterAndRenderSummaries();
+                    this.renderRepositoryOverview();
+                    this.renderSidebar();
+                    this.renderTags();
+                    this.renderCalendar();
+                    this.updateSortIndicator();
+                    
+                    // Initialize analytics dashboard
+                    this.chartManager.initializeAllCharts();
+                    this.uiRenderer.renderHealthMetrics(this.analyticsEngine);
+                    this.setupChartControls();
+                    
+                    // Initialize GitHub integration
+                    this.initializeGitHubIntegration();
+                    
+                    console.log('CommitSummaryDashboard: Initialization completed successfully');
+                    
+                } catch (error) {
+                    console.error('CommitSummaryDashboard: Initialization failed:', error);
+                    this.uiRenderer.showError('Failed to initialize dashboard. Please refresh the page.');
+                }
+            }
+
+            filterAndRenderSummaries() {
+                // Apply filters and sorting
+                this.filteredSummaries = this.filterManager.filterSummaries(this.summaries);
+                this.filteredSummaries = this.filterManager.applySorting(this.filteredSummaries);
+                
+                // Reset to first page when filtering
+                this.uiRenderer.setCurrentPage(1);
+                
+                // Render summaries
+                this.uiRenderer.renderSummaries(this.filteredSummaries, this.analyticsEngine);
+                this.updateSidebarHighlights();
+            }
+
+            // Event handling methods
+            handleSearch(query) {
+                this.filterManager.setSearchTerm(query);
+                this.filterManager.addToSearchHistory(query);
+                this.filterAndRenderSummaries();
+                this.renderActiveFilters();
+            }
+
+            executeSearch(query) {
+                const parsedQuery = this.filterManager.parseSearchQuery(query);
+                
+                if (parsedQuery.repo) {
+                    this.filterManager.setCurrentFilter(parsedQuery.repo);
+                    this.updateFilterButtons();
+                }
+                
+                if (parsedQuery.date) {
+                    this.applyDateFilter(parsedQuery.date);
+                }
+                
+                if (parsedQuery.tags.length > 0) {
+                    parsedQuery.tags.forEach(tag => this.filterManager.getActiveTags().add(tag));
+                    this.renderTags();
+                }
+                
+                if (parsedQuery.text) {
+                    this.filterManager.setSearchTerm(parsedQuery.text);
+                }
+                
+                this.filterAndRenderSummaries();
+                this.renderActiveFilters();
+            }
+
+            handleFilterChange(filter) {
+                this.filterManager.setCurrentFilter(filter);
+                this.updateFilterButtons();
+                this.filterAndRenderSummaries();
+                this.renderActiveFilters();
+            }
+
+            handleSortChange(sort) {
+                this.filterManager.setCurrentSort(sort);
+                this.updateSortButtons();
+                this.filterAndRenderSummaries();
+                this.uiRenderer.showSuccess(`Sorted by ${this.getSortLabel(sort)}`);
+            }
+
+            handleDateRangeChange(fromDate, toDate) {
+                this.filterManager.setDateRange(fromDate, toDate);
+                this.filterAndRenderSummaries();
+                this.renderActiveFilters();
+            }
+
+            // GitHub integration
+            async initializeGitHubIntegration() {
+                const tokenInput = document.getElementById('githubToken');
+                const saveTokenBtn = document.getElementById('saveToken');
+                
+                if (this.githubIntegration.hasToken()) {
+                    tokenInput.value = this.githubIntegration.getToken();
+                    await this.loadGitHubData();
+                }
+                
+                saveTokenBtn.addEventListener('click', async () => {
+                    const token = tokenInput.value.trim();
+                    if (token) {
+                        this.githubIntegration.setToken(token);
+                        await this.loadGitHubData();
+                        this.uiRenderer.showSuccess('GitHub token saved successfully!');
+                    }
+                });
+            }
+
+            async loadGitHubData() {
+                try {
+                    const repositories = this.dataManager.getRepositories();
+                    await this.githubIntegration.loadGitHubData(repositories);
+                    this.githubIntegration.renderGitHubStats();
+                } catch (error) {
+                    console.error('Error loading GitHub data:', error);
+                    const githubStats = document.getElementById('githubStats');
+                    githubStats.innerHTML = `
+                        <div class="error-message">
+                            Failed to load GitHub data. Please check your token and try again.
+                        </div>
+                    `;
+                }
+            }
+
+            // Chart controls
+            setupChartControls() {
+                document.getElementById('trendTimeframe').addEventListener('change', (e) => {
+                    this.chartManager.updateChart('commitTrend', e.target.value);
+                });
+                
+                document.getElementById('repoChartType').addEventListener('click', (e) => {
+                    const currentChart = this.chartManager.getChart('repoActivity');
+                    const currentType = currentChart.config.type;
+                    const newType = currentType === 'pie' ? 'bar' : 'pie';
+                    
+                    this.chartManager.updateChart('repoActivity', newType);
+                    e.target.textContent = newType === 'pie' ? '📊 Switch to Bar' : '🥧 Switch to Pie';
+                });
+                
+                document.getElementById('timePatternType').addEventListener('change', (e) => {
+                    this.chartManager.updateChart('timeDistribution', e.target.value);
+                });
+                
+                document.getElementById('heatmapYear').addEventListener('change', (e) => {
+                    this.chartManager.updateChart('contributionHeatmap', parseInt(e.target.value));
+                });
+                
+                document.getElementById('radarMetric').addEventListener('click', (e) => {
+                    const currentMetric = e.target.dataset.metric;
+                    const newMetric = currentMetric === 'commits' ? 'files' : 'commits';
+                    
+                    e.target.dataset.metric = newMetric;
+                    e.target.textContent = newMetric === 'commits' ? '📊 Switch to Files' : '📊 Switch to Commits';
+                    
+                    this.chartManager.updateChart('weeklyPattern', newMetric);
+                });
+
+                // Add drill-down functionality to heatmap
+                document.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('heatmap-cell')) {
+                        const dateKey = e.target.dataset.date;
+                        const commits = e.target.dataset.commits;
+                        if (commits > 0) {
+                            this.drillDownToDate(dateKey);
+                        }
+                    }
+                });
+            }
+
+            drillDownToDate(dateKey) {
+                const targetDate = new Date(dateKey);
+                const dateStr = targetDate.toISOString().split('T')[0];
+                
+                this.filterManager.setDateRange(dateStr, dateStr);
+                
+                document.getElementById('dateFrom').value = dateStr;
+                document.getElementById('dateTo').value = dateStr;
+                
+                this.filterAndRenderSummaries();
+                this.renderActiveFilters();
+                
+                document.getElementById('summariesContainer').scrollIntoView({ 
+                    behavior: 'smooth' 
+                });
+                
+                this.uiRenderer.showSuccess(`Filtered to ${targetDate.toLocaleDateString()}`);
+            }
+
+            // Utility methods
+            getSortLabel(sortType) {
+                const sortLabels = {
+                    'newest': 'Newest First',
+                    'oldest': 'Oldest First', 
+                    'repo': 'Repository Name',
+                    'activity': 'Most Active',
+                    'alphabetical': 'Alphabetical'
+                };
+                return sortLabels[sortType] || 'Newest First';
+            }
+
+            // Keep existing methods that are still needed (calendar, tags, etc.)
+            // These will be gradually refactored in future phases
+            
+            generateTags() {
+                this.allTags.clear();
+                this.summaries.forEach(summary => {
+                    summary.tags.forEach(tag => {
+                        this.allTags.add(JSON.stringify(tag));
+                    });
+                });
+            }
+
+            generateActivityData() {
+                this.activityData.clear();
+                
+                this.summaries.forEach(summary => {
+                    const dateKey = summary.timestamp.toDateString();
+                    
+                    if (!this.activityData.has(dateKey)) {
+                        this.activityData.set(dateKey, {
+                            date: summary.timestamp,
+                            count: 0,
+                            repos: new Set(),
+                            summaries: []
+                        });
+                    }
+                    
+                    const dayData = this.activityData.get(dateKey);
+                    dayData.count++;
+                    dayData.repos.add(summary.repoName);
+                    dayData.summaries.push(summary);
+                });
+                
+                this.calculateStreaks();
+            }
+
+            calculateStreaks() {
+                const sortedDates = Array.from(this.activityData.keys())
+                    .map(dateKey => new Date(dateKey))
+                    .sort((a, b) => a - b);
+                
+                let currentStreak = 0;
+                let longestStreak = 0;
+                let tempStreak = 0;
+                
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                let checkDate = new Date(today);
+                while (true) {
+                    const dateKey = checkDate.toDateString();
+                    if (this.activityData.has(dateKey)) {
+                        currentStreak++;
+                        checkDate.setDate(checkDate.getDate() - 1);
+                    } else {
+                        break;
+                    }
+                }
+                
+                for (let i = 0; i < sortedDates.length; i++) {
+                    if (i === 0) {
+                        tempStreak = 1;
+                    } else {
+                        const prevDate = sortedDates[i - 1];
+                        const currDate = sortedDates[i];
+                        const dayDiff = (currDate - prevDate) / (1000 * 60 * 60 * 24);
+                        
+                        if (dayDiff === 1) {
+                            tempStreak++;
+                        } else {
+                            longestStreak = Math.max(longestStreak, tempStreak);
+                            tempStreak = 1;
+                        }
+                    }
+                }
+                longestStreak = Math.max(longestStreak, tempStreak);
+                
+                this.streakData = { current: currentStreak, longest: longestStreak };
+            }
+
+            // Pagination event handlers
+            setupPagination() {
+                document.getElementById('prevPage').addEventListener('click', () => {
+                    if (this.uiRenderer.getCurrentPage() > 1) {
+                        this.uiRenderer.setCurrentPage(this.uiRenderer.getCurrentPage() - 1);
+                        this.uiRenderer.renderSummaries(this.filteredSummaries, this.analyticsEngine);
+                    }
+                });
+                
+                document.getElementById('nextPage').addEventListener('click', () => {
+                    if (this.uiRenderer.getCurrentPage() < this.uiRenderer.getTotalPages()) {
+                        this.uiRenderer.setCurrentPage(this.uiRenderer.getCurrentPage() + 1);
+                        this.uiRenderer.renderSummaries(this.filteredSummaries, this.analyticsEngine);
+                    }
+                });
+
+                // Add click handlers for page numbers (delegated)
+                document.getElementById('paginationNumbers').addEventListener('click', (e) => {
+                    if (e.target.classList.contains('pagination-btn') && e.target.dataset.page) {
+                        const page = parseInt(e.target.dataset.page);
+                        if (page !== this.uiRenderer.getCurrentPage()) {
+                            this.uiRenderer.setCurrentPage(page);
+                            this.uiRenderer.renderSummaries(this.filteredSummaries, this.analyticsEngine);
+                        }
+                    }
+                });
+            }
+
+            // Essential UI methods that need to be kept for now
+            updateFilterButtons() {
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.filter === this.filterManager.getCurrentFilter());
+                });
+            }
+
+            updateSortButtons() {
+                document.querySelectorAll('.sort-option').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.sort === this.filterManager.getCurrentSort());
+                });
+                this.updateSortIndicator();
+            }
+
+            updateSortIndicator() {
+                const sortValue = document.getElementById('sortValue');
+                const sortDropdown = document.getElementById('sortDropdown');
+                const sidebarSortValue = document.getElementById('sidebarSortValue');
+                
+                const currentLabel = this.getSortLabel(this.filterManager.getCurrentSort());
+                
+                if (sortValue) sortValue.textContent = currentLabel;
+                if (sortDropdown) sortDropdown.value = this.filterManager.getCurrentSort();
+                if (sidebarSortValue) sidebarSortValue.textContent = currentLabel;
+            }
+
+            renderActiveFilters() {
+                const activeFiltersContainer = document.getElementById('activeFilters');
+                const filters = [];
+                
+                const searchTerm = this.filterManager.getSearchTerm();
+                const currentFilter = this.filterManager.getCurrentFilter();
+                const dateRange = this.filterManager.getDateRange();
+                const activeTags = this.filterManager.getActiveTags();
+                
+                if (searchTerm) {
+                    filters.push({ type: 'search', label: `Search: "${searchTerm}"`, value: 'search' });
+                }
+                
+                if (currentFilter !== 'all') {
+                    filters.push({ type: 'filter', label: `Filter: ${currentFilter}`, value: 'filter' });
+                }
+                
+                if (dateRange.from || dateRange.to) {
+                    const dateLabel = `Date: ${dateRange.from || 'any'} to ${dateRange.to || 'any'}`;
+                    filters.push({ type: 'date', label: dateLabel, value: 'date' });
+                }
+                
+                if (activeTags.size > 0) {
+                    Array.from(activeTags).forEach(tag => {
+                        filters.push({ type: 'tag', label: `Tag: ${tag}`, value: tag });
+                    });
+                }
+                
+                if (filters.length === 0) {
+                    activeFiltersContainer.innerHTML = '';
+                    return;
+                }
+                
+                activeFiltersContainer.innerHTML = filters.map(filter => `
+                    <div class="active-filter">
+                        <span>${filter.label}</span>
+                        <button class="filter-remove" data-type="${filter.type}" data-value="${filter.value}">×</button>
+                    </div>
+                `).join('');
+                
+                // Add remove handlers
+                activeFiltersContainer.querySelectorAll('.filter-remove').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const type = e.target.dataset.type;
+                        const value = e.target.dataset.value;
+                        
+                        switch (type) {
+                            case 'search':
+                                document.getElementById('searchBox').value = '';
+                                this.filterManager.setSearchTerm('');
+                                break;
+                            case 'filter':
+                                this.filterManager.setCurrentFilter('all');
+                                this.updateFilterButtons();
+                                break;
+                            case 'date':
+                                document.getElementById('dateFrom').value = '';
+                                document.getElementById('dateTo').value = '';
+                                this.filterManager.setDateRange('', '');
+                                break;
+                            case 'tag':
+                                this.filterManager.getActiveTags().delete(value);
+                                this.renderTags();
+                                break;
+                        }
+                        
+                        this.filterAndRenderSummaries();
+                        this.renderActiveFilters();
+                    });
+                });
+            }
+
+            // Placeholder methods for features that will be refactored later
+            renderRepositoryOverview() {
+                // TODO: Move to UIRenderer in next phase
+                console.log('renderRepositoryOverview: Placeholder - will be refactored');
+            }
+
+            renderSidebar() {
+                // TODO: Move to UIRenderer in next phase
+                console.log('renderSidebar: Placeholder - will be refactored');
+            }
+
+            renderTags() {
+                // TODO: Move to UIRenderer in next phase
+                console.log('renderTags: Placeholder - will be refactored');
+            }
+
+            renderCalendar() {
+                // TODO: Move to CalendarManager in next phase
+                console.log('renderCalendar: Placeholder - will be refactored');
+            }
+
+            updateSidebarHighlights() {
+                // TODO: Move to UIRenderer in next phase
+                console.log('updateSidebarHighlights: Placeholder - will be refactored');
+            }
+
+            applyDateFilter(filterType) {
+                // TODO: Move to FilterManager in next phase
+                console.log('applyDateFilter: Placeholder - will be refactored');
+            }
+
+            setupEventListeners() {
+                console.log('CommitSummaryDashboard: Setting up event listeners...');
+                
+                // Search functionality
+                const searchBox = document.getElementById('searchBox');
+                const searchClear = document.getElementById('searchClear');
+                
+                searchBox.addEventListener('input', (e) => {
+                    const value = e.target.value;
+                    this.handleSearch(value);
+                    searchClear.style.display = value ? 'block' : 'none';
+                });
+
+                searchBox.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        this.executeSearch(e.target.value);
+                    }
+                });
+
+                searchClear.addEventListener('click', () => {
+                    searchBox.value = '';
+                    this.filterManager.setSearchTerm('');
+                    searchClear.style.display = 'none';
+                    this.filterAndRenderSummaries();
+                    this.renderActiveFilters();
+                });
+
+                // Filter buttons
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.handleFilterChange(e.target.dataset.filter);
+                    });
+                });
+
+                // Sort options
+                document.querySelectorAll('.sort-option').forEach(option => {
+                    option.addEventListener('click', (e) => {
+                        const sortType = e.target.dataset.sort;
+                        if (sortType) {
+                            this.handleSortChange(sortType);
+                        }
+                    });
+                });
+
+                // Date filters
+                document.getElementById('dateFrom').addEventListener('change', (e) => {
+                    const dateRange = this.filterManager.getDateRange();
+                    this.handleDateRangeChange(e.target.value, dateRange.to);
+                });
+
+                document.getElementById('dateTo').addEventListener('change', (e) => {
+                    const dateRange = this.filterManager.getDateRange();
+                    this.handleDateRangeChange(dateRange.from, e.target.value);
+                });
+
+                // Setup pagination
+                this.setupPagination();
+
+                // Sidebar toggles
+                document.getElementById('sidebarToggle').addEventListener('click', () => {
+                    const sidebar = document.getElementById('sidebar');
+                    const mainContent = document.getElementById('mainContent');
+                    const isCollapsed = sidebar.classList.toggle('collapsed');
+                    
+                    if (isCollapsed) {
+                        mainContent.classList.add('left-expanded');
+                    } else {
+                        mainContent.classList.remove('left-expanded');
+                    }
+                });
+
+                document.getElementById('calendarToggle').addEventListener('click', () => {
+                    const rightSidebar = document.getElementById('rightSidebar');
+                    const mainContent = document.getElementById('mainContent');
+                    const isCollapsed = rightSidebar.classList.toggle('collapsed');
+                    
+                    if (isCollapsed) {
+                        mainContent.classList.add('right-expanded');
+                    } else {
+                        mainContent.classList.remove('right-expanded');
+                    }
+                });
+
+                // Help toggle
+                document.getElementById('helpToggle').addEventListener('click', () => {
+                    this.toggleHelp();
+                });
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    this.handleKeyboardShortcuts(e);
+                });
+
+                console.log('CommitSummaryDashboard: Event listeners setup completed');
+            }
+
+            toggleHelp() {
+                const helpSection = document.getElementById('helpSection');
+                const helpToggle = document.getElementById('helpToggle');
+                
+                if (helpSection.classList.contains('show')) {
+                    helpSection.classList.remove('show');
+                    helpToggle.textContent = '?';
+                } else {
+                    helpSection.classList.add('show');
+                    helpToggle.textContent = '×';
+                    helpSection.scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+
+            handleKeyboardShortcuts(e) {
+                const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+                const cmdKey = isMac ? e.metaKey : e.ctrlKey;
+                
+                if (cmdKey && e.key === 'k') {
+                    e.preventDefault();
+                    document.getElementById('searchBox').focus();
+                }
+                
+                if (e.key === 'Escape') {
+                    const helpSection = document.getElementById('helpSection');
+                    if (helpSection.classList.contains('show')) {
+                        this.toggleHelp();
+                    } else {
+                        const searchBox = document.getElementById('searchBox');
+                        searchBox.value = '';
+                        this.filterManager.setSearchTerm('');
+                        this.filterAndRenderSummaries();
+                        this.renderActiveFilters();
+                    }
+                }
+                
+                if (e.key === 'F1' || (cmdKey && e.key === '?')) {
+                    e.preventDefault();
+                    this.toggleHelp();
+                }
+            }
+        }
             constructor() {
                 this.summaries = [];
                 this.filteredSummaries = [];
