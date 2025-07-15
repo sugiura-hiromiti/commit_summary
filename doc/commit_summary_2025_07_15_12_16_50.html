@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commit Summary - commit_summary - July 15, 2025</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .header .subtitle {
+            color: #7f8c8d;
+            font-size: 1.2rem;
+            margin-bottom: 25px;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .status-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .status-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .status-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .tag {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .tag.repo { background: #f3e5f5; color: #7b1fa2; }
+        .tag.feature { background: #e8f5e8; color: #2e7d32; }
+
+        .main-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .commit-section {
+            margin-bottom: 40px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 30px;
+        }
+
+        .commit-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .commit-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .commit-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            flex: 1;
+        }
+
+        .commit-title:hover {
+            color: #667eea;
+        }
+
+        .commit-hash {
+            background: #f8f9fa;
+            color: #495057;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: all;
+        }
+
+        .commit-hash:hover {
+            background: #e9ecef;
+            transform: scale(1.05);
+        }
+
+        .commit-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .meta-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .commit-body {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border-left: 4px solid #667eea;
+        }
+
+        .commit-body h2, .commit-body h3 {
+            color: #2c3e50;
+            margin: 15px 0 10px 0;
+        }
+
+        .commit-body ul {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .commit-body li {
+            margin-bottom: 5px;
+        }
+
+        .commit-body strong {
+            color: #667eea;
+        }
+
+        .diff-section {
+            margin-top: 25px;
+        }
+
+        .diff-file {
+            margin-bottom: 25px;
+            border: 1px solid #e1e4e8;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .diff-file-header {
+            background: #f6f8fa;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e1e4e8;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #24292e;
+        }
+
+        .diff-content {
+            background: #fff;
+            overflow-x: auto;
+        }
+
+        .diff-hunk {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .diff-line {
+            padding: 2px 16px;
+            white-space: pre;
+        }
+
+        .diff-line.addition {
+            background: #e6ffed;
+            color: #24292e;
+        }
+
+        .diff-line.deletion {
+            background: #ffeef0;
+            color: #24292e;
+        }
+
+        .diff-line.context {
+            background: #fff;
+            color: #586069;
+        }
+
+        .diff-line.hunk-header {
+            background: #f1f8ff;
+            color: #0366d6;
+            font-weight: 600;
+        }
+
+        .overview {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 16px;
+            margin-top: 30px;
+        }
+
+        .overview h2 {
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .overview-item {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .overview-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .overview-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .commit-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .commit-meta {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <h1>🚀 Commit Summary Report</h1>
+            <div class="subtitle">Repository: commit_summary | Generated: July 15, 2025</div>
+            
+            <div class="status-grid">
+                <div class="status-item">
+                    <div class="status-label">Operation Status</div>
+                    <div class="status-value">✅ Success</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">Push Status</div>
+                    <div class="status-value">✅ Completed</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">Branch</div>
+                    <div class="status-value">main</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">Repository</div>
+                    <div class="status-value">
+                        <a href="https://github.com/sugiura-hiromiti/commit_summary" 
+                           style="color: white; text-decoration: none;">
+                           sugiura-hiromiti/commit_summary
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tags">
+                <span class="tag repo">commit_summary</span>
+                <span class="tag feature">UI Enhancement</span>
+                <span class="tag feature">Error Handling</span>
+                <span class="tag feature">Testing Framework</span>
+                <span class="tag feature">Calendar View</span>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="commit-section">
+                <div class="commit-header">
+                    <h2 class="commit-title" onclick="window.open('https://github.com/sugiura-hiromiti/commit_summary/commit/6395c5b70d765ee05c76a075121834d3bc90301a', '_blank')">
+                        feat: Implement comprehensive dashboard UI rendering and error handling
+                    </h2>
+                    <div class="commit-hash" onclick="navigator.clipboard.writeText('6395c5b70d765ee05c76a075121834d3bc90301a')" title="Click to copy full hash">
+                        6395c5b
+                    </div>
+                </div>
+
+                <div class="commit-meta">
+                    <div class="meta-item">
+                        <div class="meta-icon">👤</div>
+                        <div>
+                            <strong>Author:</strong> sugiura-hiromiti<br>
+                            <small>sugiura130418@icloud.com</small>
+                        </div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-icon">📊</div>
+                        <div>
+                            <strong>Changes:</strong> 1 file changed<br>
+                            <small>+3,135 insertions, -342 deletions</small>
+                        </div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-icon">📅</div>
+                        <div>
+                            <strong>Date:</strong> July 15, 2025<br>
+                            <small>12:16:50 +0900</small>
+                        </div>
+                    </div>
+                    <div class="meta-item">
+                        <div class="meta-icon">🔗</div>
+                        <div>
+                            <strong>Commit:</strong> 
+                            <a href="https://github.com/sugiura-hiromiti/commit_summary/commit/6395c5b70d765ee05c76a075121834d3bc90301a" target="_blank">
+                                View on GitHub
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="commit-body">
+                    <h2>Major Features Added</h2>
+
+                    <h3>UI Rendering System</h3>
+                    <ul>
+                        <li><strong>Repository Overview</strong>: Interactive cards with activity visualization and statistics</li>
+                        <li><strong>Sidebar Components</strong>: Timeline, multi-select filters, activity charts, search history</li>
+                        <li><strong>Calendar View</strong>: Full calendar grid with activity indicators and date selection</li>
+                        <li><strong>Tag System</strong>: Dynamic tag rendering with filtering capabilities</li>
+                    </ul>
+
+                    <h3>Error Handling & Testing</h3>
+                    <ul>
+                        <li><strong>Error Reporting</strong>: Comprehensive error logging and export functionality</li>
+                        <li><strong>Test Runner</strong>: Automated testing system with detailed reporting</li>
+                        <li><strong>System Status</strong>: Real-time monitoring of loading states and performance</li>
+                        <li><strong>Recovery Operations</strong>: Retry mechanisms for failed operations</li>
+                    </ul>
+
+                    <h3>Calendar Features</h3>
+                    <ul>
+                        <li><strong>Activity Visualization</strong>: Heat map style activity indicators</li>
+                        <li><strong>Date Selection</strong>: Multi-date selection with filtering</li>
+                        <li><strong>Statistics</strong>: Monthly commits, streaks, and activity patterns</li>
+                        <li><strong>Repository Distribution</strong>: Visual breakdown of commits by repository</li>
+                    </ul>
+
+                    <h3>Enhanced Interactivity</h3>
+                    <ul>
+                        <li><strong>Click Handlers</strong>: Comprehensive event handling for all interactive elements</li>
+                        <li><strong>Keyboard Shortcuts</strong>: Enhanced keyboard navigation support</li>
+                        <li><strong>Filter Integration</strong>: Seamless integration with existing filter system</li>
+                        <li><strong>Real-time Updates</strong>: Dynamic UI updates based on user interactions</li>
+                    </ul>
+
+                    <h3>Performance Improvements</h3>
+                    <ul>
+                        <li><strong>Error Boundaries</strong>: Graceful error handling to prevent UI crashes</li>
+                        <li><strong>Loading States</strong>: Visual feedback during data processing</li>
+                        <li><strong>Cache Management</strong>: Improved caching with clear/reload functionality</li>
+                        <li><strong>Memory Management</strong>: Proper cleanup of event listeners and resources</li>
+                    </ul>
+
+                    <p><strong>Summary:</strong> This commit transforms the dashboard from a basic interface into a fully-featured commit analysis platform with comprehensive visualization and interaction capabilities.</p>
+                </div>
+
+                <div class="diff-section">
+                    <h3>📝 File Changes</h3>
+                    
+                    <div class="diff-file">
+                        <div class="diff-file-header">
+                            📄 index.html
+                        </div>
+                        <div class="diff-content">
+                            <div class="diff-hunk">
+                                <div class="diff-line hunk-header">@@ Major Changes Summary @@</div>
+                                <div class="diff-line addition">+ Added comprehensive UI rendering methods (renderRepositoryOverview, renderSidebar, etc.)</div>
+                                <div class="diff-line addition">+ Implemented error handling and testing framework</div>
+                                <div class="diff-line addition">+ Added calendar view with activity visualization</div>
+                                <div class="diff-line addition">+ Enhanced interactivity with click handlers and event listeners</div>
+                                <div class="diff-line addition">+ Added system status monitoring and recovery operations</div>
+                                <div class="diff-line addition">+ Implemented comprehensive tag and filter system</div>
+                                <div class="diff-line addition">+ Added performance improvements and memory management</div>
+                                <div class="diff-line context">  Total: 3,135 lines added, 342 lines modified</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="diff-file">
+                        <div class="diff-file-header">
+                            🎨 Key Features Added
+                        </div>
+                        <div class="diff-content">
+                            <div class="diff-hunk">
+                                <div class="diff-line addition">+ renderRepositoryOverview() - Interactive repository cards</div>
+                                <div class="diff-line addition">+ renderCalendar() - Full calendar with activity heat map</div>
+                                <div class="diff-line addition">+ setupErrorReportingListeners() - Comprehensive error handling</div>
+                                <div class="diff-line addition">+ TestRunner integration - Automated testing system</div>
+                                <div class="diff-line addition">+ Enhanced sidebar components (timeline, charts, search)</div>
+                                <div class="diff-line addition">+ Activity patterns and statistics calculation</div>
+                                <div class="diff-line addition">+ Real-time UI updates and filter integration</div>
+                                <div class="diff-line addition">+ Memory management and performance optimizations</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overview Section -->
+        <div class="overview">
+            <h2>📊 Commit Overview</h2>
+            <div class="overview-grid">
+                <div class="overview-item">
+                    <div class="overview-value">1</div>
+                    <div class="overview-label">Total Commits</div>
+                </div>
+                <div class="overview-item">
+                    <div class="overview-value">1</div>
+                    <div class="overview-label">Files Changed</div>
+                </div>
+                <div class="overview-item">
+                    <div class="overview-value">3,135</div>
+                    <div class="overview-label">Lines Added</div>
+                </div>
+                <div class="overview-item">
+                    <div class="overview-value">342</div>
+                    <div class="overview-label">Lines Modified</div>
+                </div>
+                <div class="overview-item">
+                    <div class="overview-value">UI/UX</div>
+                    <div class="overview-label">Primary Focus</div>
+                </div>
+                <div class="overview-item">
+                    <div class="overview-value">✅</div>
+                    <div class="overview-label">Build Status</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add some interactivity
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click-to-copy functionality for commit hashes
+            document.querySelectorAll('.commit-hash').forEach(hash => {
+                hash.addEventListener('click', function() {
+                    const fullHash = this.getAttribute('onclick').match(/'([^']+)'/)[1];
+                    navigator.clipboard.writeText(fullHash).then(() => {
+                        const originalText = this.textContent;
+                        this.textContent = '✅ Copied!';
+                        setTimeout(() => {
+                            this.textContent = originalText;
+                        }, 2000);
+                    });
+                });
+            });
+
+            // Add smooth scrolling for internal links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+
+            // Add animation to status items
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            });
+
+            document.querySelectorAll('.status-item, .overview-item').forEach(item => {
+                item.style.opacity = '0';
+                item.style.transform = 'translateY(20px)';
+                item.style.transition = 'all 0.6s ease';
+                observer.observe(item);
+            });
+        });
+    </script>
+</body>
+</html>
