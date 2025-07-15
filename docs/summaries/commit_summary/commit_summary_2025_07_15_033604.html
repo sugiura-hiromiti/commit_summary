@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commit Summary - commit_summery - July 15, 2025</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header .subtitle {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .status-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .status-label {
+            font-size: 0.9rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .status-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .status-value a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .status-value a:hover {
+            text-decoration: underline;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .commits-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .commit-item {
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .commit-item:hover {
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .commit-header {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .commit-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .commit-title:hover {
+            color: #667eea;
+        }
+
+        .commit-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .commit-hash {
+            font-family: 'Monaco', 'Menlo', monospace;
+            background: #e9ecef;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            user-select: all;
+        }
+
+        .commit-hash:hover {
+            background: #dee2e6;
+        }
+
+        .commit-stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+        }
+
+        .stat.additions { color: #28a745; }
+        .stat.deletions { color: #dc3545; }
+        .stat.files { color: #6f42c1; }
+
+        .commit-body {
+            padding: 20px;
+        }
+
+        .commit-message {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 20px;
+        }
+
+        .commit-message ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .commit-message li {
+            margin-bottom: 5px;
+        }
+
+        .diff-section {
+            margin-top: 20px;
+        }
+
+        .file-diff {
+            margin-bottom: 20px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .file-header {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .diff-content {
+            background: #fff;
+            padding: 0;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .diff-line {
+            padding: 2px 15px;
+            white-space: pre-wrap;
+        }
+
+        .diff-line.addition {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .diff-line.deletion {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .diff-line.context {
+            background: #fff;
+            color: #333;
+        }
+
+        .overview {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .overview-item {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .overview-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .overview-label {
+            font-size: 0.9rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .commit-meta {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <h1>
+                🚀 Commit Summary Report
+            </h1>
+            <div class="subtitle">
+                Generated on July 15, 2025 at 03:36:04
+            </div>
+            
+            <!-- Status Information -->
+            <div class="status-grid">
+                <div class="status-item">
+                    <div class="status-label">Operation Status</div>
+                    <div class="status-value">✅ Success</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">Push Status</div>
+                    <div class="status-value">✅ Pushed Successfully</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">Git Branch</div>
+                    <div class="status-value">main</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">Remote Repository</div>
+                    <div class="status-value">
+                        <a href="https://github.com/sugiura-hiromiti/commit_summery" target="_blank">
+                            sugiura-hiromiti/commit_summery
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tags -->
+            <div class="tags">
+                <span class="tag">feat</span>
+                <span class="tag">calendar</span>
+                <span class="tag">activity-tracking</span>
+                <span class="tag">ui-enhancement</span>
+                <span class="tag">responsive-design</span>
+            </div>
+        </div>
+
+        <!-- Commits Section -->
+        <div class="commits-section">
+            <h2 class="section-title">
+                📝 Generated Commits
+            </h2>
+
+            <!-- Commit 1 -->
+            <div class="commit-item">
+                <div class="commit-header">
+                    <div class="commit-title" onclick="window.open('https://github.com/sugiura-hiromiti/commit_summery/commit/d1c07e51a66c607ae7324b2bb00712cf0b22d5a6', '_blank')">
+                        feat: Add comprehensive calendar and activity tracking styles
+                    </div>
+                    
+                    <div class="commit-meta">
+                        <div class="meta-item">
+                            <span>🔗</span>
+                            <span class="commit-hash" onclick="navigator.clipboard.writeText('d1c07e51a66c607ae7324b2bb00712cf0b22d5a6')">
+                                d1c07e5
+                            </span>
+                        </div>
+                        <div class="meta-item">
+                            <span>👤</span>
+                            <span>sugiura-hiromiti &lt;sugiura130418@icloud.com&gt;</span>
+                        </div>
+                        <div class="meta-item">
+                            <span>📅</span>
+                            <span>July 15, 2025 03:35:40</span>
+                        </div>
+                    </div>
+
+                    <div class="commit-stats">
+                        <div class="stat files">
+                            <span>📄</span>
+                            <span>1 file changed</span>
+                        </div>
+                        <div class="stat additions">
+                            <span>+</span>
+                            <span>1080 insertions</span>
+                        </div>
+                        <div class="stat deletions">
+                            <span>-</span>
+                            <span>9 deletions</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="commit-body">
+                    <div class="commit-message">
+                        <strong>Description:</strong>
+                        <ul>
+                            <li>Add calendar grid layout with responsive design</li>
+                            <li>Implement activity level indicators (low, medium, high)</li>
+                            <li>Add calendar navigation and header styling</li>
+                            <li>Include heatmap visualization styles</li>
+                            <li>Add repository distribution and analytics styling</li>
+                            <li>Implement tooltip and interactive elements styling</li>
+                            <li>Add responsive sidebar toggles and layout adjustments</li>
+                        </ul>
+                    </div>
+
+                    <div class="diff-section">
+                        <h4>📋 File Changes</h4>
+                        
+                        <div class="file-diff">
+                            <div class="file-header">
+                                index.html
+                            </div>
+                            <div class="diff-content">
+                                <div class="diff-line addition">+        .right-sidebar {</div>
+                                <div class="diff-line addition">+            width: 350px;</div>
+                                <div class="diff-line addition">+            background: rgba(255, 255, 255, 0.95);</div>
+                                <div class="diff-line addition">+            backdrop-filter: blur(10px);</div>
+                                <div class="diff-line addition">+            height: 100vh;</div>
+                                <div class="diff-line addition">+            overflow-y: auto;</div>
+                                <div class="diff-line addition">+            position: fixed;</div>
+                                <div class="diff-line addition">+            right: 0;</div>
+                                <div class="diff-line addition">+            top: 0;</div>
+                                <div class="diff-line addition">+            z-index: 1000;</div>
+                                <div class="diff-line addition">+            transition: transform 0.3s ease;</div>
+                                <div class="diff-line addition">+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);</div>
+                                <div class="diff-line addition">+        }</div>
+                                <div class="diff-line context">...</div>
+                                <div class="diff-line addition">+        .calendar-section {</div>
+                                <div class="diff-line addition">+            padding: 20px;</div>
+                                <div class="diff-line addition">+            border-bottom: 1px solid #e9ecef;</div>
+                                <div class="diff-line addition">+        }</div>
+                                <div class="diff-line context">...</div>
+                                <div class="diff-line addition">+        .calendar-grid {</div>
+                                <div class="diff-line addition">+            display: grid;</div>
+                                <div class="diff-line addition">+            grid-template-columns: repeat(7, 1fr);</div>
+                                <div class="diff-line addition">+            gap: 2px;</div>
+                                <div class="diff-line addition">+            margin-bottom: 15px;</div>
+                                <div class="diff-line addition">+        }</div>
+                                <div class="diff-line context">...</div>
+                                <div class="diff-line addition">+        .calendar-day.high-activity {</div>
+                                <div class="diff-line addition">+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);</div>
+                                <div class="diff-line addition">+            color: white;</div>
+                                <div class="diff-line addition">+        }</div>
+                                <div class="diff-line context">...</div>
+                                <div class="diff-line addition">+    &lt;button class="calendar-toggle" id="calendarToggle"&gt;📅&lt;/button&gt;</div>
+                                <div class="diff-line context">...</div>
+                                <div class="diff-line addition">+    &lt;aside class="right-sidebar" id="rightSidebar"&gt;</div>
+                                <div class="diff-line addition">+        &lt;!-- Calendar Header --&gt;</div>
+                                <div class="diff-line addition">+        &lt;div class="calendar-section"&gt;</div>
+                                <div class="diff-line addition">+            &lt;div class="calendar-header"&gt;</div>
+                                <div class="diff-line addition">+                &lt;h3 class="calendar-title"&gt;</div>
+                                <div class="diff-line addition">+                    📅 Activity Calendar</div>
+                                <div class="diff-line addition">+                &lt;/h3&gt;</div>
+                                <div class="diff-line context">...</div>
+                                <div class="diff-line addition">+                // Calendar properties</div>
+                                <div class="diff-line addition">+                this.currentCalendarDate = new Date();</div>
+                                <div class="diff-line addition">+                this.selectedDates = new Set();</div>
+                                <div class="diff-line addition">+                this.calendarView = 'month'; // 'month' or 'heatmap'</div>
+                                <div class="diff-line addition">+                this.activityData = new Map();</div>
+                                <div class="diff-line addition">+                this.streakData = { current: 0, longest: 0 };</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overview Section -->
+        <div class="overview">
+            <h2 class="section-title">
+                📊 Summary Overview
+            </h2>
+            
+            <div class="overview-grid">
+                <div class="overview-item">
+                    <div class="overview-number">1</div>
+                    <div class="overview-label">Total Commits</div>
+                </div>
+                <div class="overview-item">
+                    <div class="overview-number">1</div>
+                    <div class="overview-label">Files Modified</div>
+                </div>
+                <div class="overview-item">
+                    <div class="overview-number">1,080</div>
+                    <div class="overview-label">Lines Added</div>
+                </div>
+                <div class="overview-item">
+                    <div class="overview-number">9</div>
+                    <div class="overview-label">Lines Removed</div>
+                </div>
+                <div class="overview-item">
+                    <div class="overview-number">1,071</div>
+                    <div class="overview-label">Net Change</div>
+                </div>
+                <div class="overview-item">
+                    <div class="overview-number">100%</div>
+                    <div class="overview-label">Success Rate</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add click-to-copy functionality for commit hashes
+        document.querySelectorAll('.commit-hash').forEach(hash => {
+            hash.addEventListener('click', function() {
+                const text = this.textContent;
+                navigator.clipboard.writeText(text).then(() => {
+                    const originalText = this.textContent;
+                    this.textContent = 'Copied!';
+                    this.style.background = '#d4edda';
+                    setTimeout(() => {
+                        this.textContent = originalText;
+                        this.style.background = '#e9ecef';
+                    }, 1000);
+                });
+            });
+        });
+
+        // Add smooth scrolling for internal links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>

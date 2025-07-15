@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commit Summary - .config - 2025-07-14</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .status-item {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+        .status-label {
+            font-weight: bold;
+            opacity: 0.8;
+            font-size: 0.9em;
+        }
+        .status-value {
+            font-size: 1.1em;
+            margin-top: 5px;
+        }
+        .commit-container {
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .commit-header {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .commit-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .commit-title:hover {
+            color: #3498db;
+            text-decoration: underline;
+        }
+        .commit-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .meta-label {
+            font-size: 0.85em;
+            color: #6c757d;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .meta-value {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9em;
+            margin-top: 3px;
+            padding: 5px 8px;
+            background: #f1f3f4;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .commit-body {
+            padding: 20px;
+        }
+        .commit-message {
+            background: #f8f9fa;
+            padding: 15px;
+            border-left: 4px solid #007bff;
+            margin-bottom: 20px;
+            border-radius: 0 5px 5px 0;
+        }
+        .diff-section {
+            margin-top: 20px;
+        }
+        .file-header {
+            background: #343a40;
+            color: white;
+            padding: 10px 15px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        .diff-content {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.85em;
+            line-height: 1.4;
+            overflow-x: auto;
+            white-space: pre;
+        }
+        .diff-add {
+            background-color: rgba(72, 187, 120, 0.2);
+            color: #68d391;
+        }
+        .diff-remove {
+            background-color: rgba(245, 101, 101, 0.2);
+            color: #fc8181;
+        }
+        .diff-context {
+            color: #a0aec0;
+        }
+        .overview {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-top: 30px;
+        }
+        .overview h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #3498db;
+        }
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 Commit Summary</h1>
+        <p>Repository: <strong>.config</strong> | Date: <strong>2025-07-14 21:17:05</strong></p>
+        
+        <div class="status-grid">
+            <div class="status-item">
+                <div class="status-label">Operation Status</div>
+                <div class="status-value">✅ Success</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">Push Status</div>
+                <div class="status-value">✅ Pushed to Remote</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">Git Branch</div>
+                <div class="status-value">main</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">Remote Repository</div>
+                <div class="status-value">github.personal:sugiura-hiromiti/.config.git</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="commit-container">
+        <div class="commit-header">
+            <a href="https://github.com/sugiura-hiromiti/.config/commit/9ba6e3f064d138597e467fd1f369f0ecb71d0f48" class="commit-title" target="_blank">
+                feat(nix): improve flake formatting and add terminal title updates
+            </a>
+            
+            <div class="commit-meta">
+                <div class="meta-item">
+                    <div class="meta-label">Commit Hash</div>
+                    <div class="meta-value" onclick="navigator.clipboard.writeText('9ba6e3f064d138597e467fd1f369f0ecb71d0f48')">9ba6e3f</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Author</div>
+                    <div class="meta-value">sugiura-hiromiti &lt;sugiura130418@icloud.com&gt;</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Files Changed</div>
+                    <div class="meta-value">2 files</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Changes</div>
+                    <div class="meta-value">+88 -82</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="commit-body">
+            <div class="commit-message">
+                <strong>Description:</strong><br>
+                - Reformat flake.nix with better indentation and structure<br>
+                - Add terminal title updates during nix operations for better UX<br>
+                - Switch username configuration from hiromichi.sugiura to a<br><br>
+                This improves code readability and provides visual feedback during long-running nix operations.
+            </div>
+            
+            <div class="diff-section">
+                <div class="file-header">📄 nix/flake.nix</div>
+                <div class="diff-content">@@ -25,98 +25,104 @@
+      url = "github:nix-community/neovim-nightly-overlay";
+    };
+  };
+<span class="diff-remove">-  outputs = {
+-    self,
+-    nixpkgs,
+-    neovim-nightly-overlay,
+-    home-manager,
+-    nix-darwin,
+-  } @ inputs: let</span>
+<span class="diff-add">+  outputs =
++    {
++      self,
++      nixpkgs,
++      neovim-nightly-overlay,
++      home-manager,
++      nix-darwin,
++    }@inputs:
++    let</span>
+<span class="diff-context">      secret = import ./secret.nix { };
+      user = builtins.replaceStrings [ "." ] [ "-" ] secret.username;</span>
+                </div>
+                
+                <div class="file-header">📄 nix/secret.nix</div>
+                <div class="diff-content">@@ -1,7 +1,7 @@
+ {}: {
+<span class="diff-remove">-  username = "hiromichi.sugiura";</span>
+<span class="diff-add">+  # username = "hiromichi.sugiura";</span>
+   # username = "xsugiurah";
+<span class="diff-remove">-  # username = "a";</span>
+<span class="diff-add">+  username = "a";</span>
+   system = "aarch64-darwin";
+   # system = "x86_64-linux";
+ }</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="commit-container">
+        <div class="commit-header">
+            <a href="https://github.com/sugiura-hiromiti/.config/commit/8feff267cdd4dee1d9b94008fd9b117e95f072a4" class="commit-title" target="_blank">
+                feat(env): add COMMIT_SUMMARY_PATH environment variable
+            </a>
+            
+            <div class="commit-meta">
+                <div class="meta-item">
+                    <div class="meta-label">Commit Hash</div>
+                    <div class="meta-value" onclick="navigator.clipboard.writeText('8feff267cdd4dee1d9b94008fd9b117e95f072a4')">8feff26</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Author</div>
+                    <div class="meta-value">sugiura-hiromiti &lt;sugiura130418@icloud.com&gt;</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Files Changed</div>
+                    <div class="meta-value">1 file</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Changes</div>
+                    <div class="meta-value">+1 -0</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="commit-body">
+            <div class="commit-message">
+                <strong>Description:</strong><br>
+                Add new environment variable to configure the path where commit summary HTML files will be stored. This supports the auto-commit script's enhanced HTML generation functionality.
+            </div>
+            
+            <div class="diff-section">
+                <div class="file-header">📄 .zshenv</div>
+                <div class="diff-content">@@ -18,6 +18,7 @@ export RIPGREP_CONFIG_PATH=$HOME/.config/rg/config
+ export YABAI_CERT=yabai-cert
+ export JAVA_HOME=/Library/Java/JavaVirtualMachines/openjdk.jdk/Contents/Home/
+ export MY_CUSTOM_ENV_VARS_CURRENTLY_EXECUTING_PROMPT=''
+<span class="diff-add">+export COMMIT_SUMMARY_PATH=$HOME/.local/state/commit_summery</span>
+ 
+ #aliases
+ # to remove alias in zsh, simply just remove it</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="commit-container">
+        <div class="commit-header">
+            <a href="https://github.com/sugiura-hiromiti/.config/commit/d8359be82a379fd5d9081ff85e428a3741c3d9a4" class="commit-title" target="_blank">
+                feat(script): enhance auto_commit.sh with improved HTML generation
+            </a>
+            
+            <div class="commit-meta">
+                <div class="meta-item">
+                    <div class="meta-label">Commit Hash</div>
+                    <div class="meta-value" onclick="navigator.clipboard.writeText('d8359be82a379fd5d9081ff85e428a3741c3d9a4')">d8359be</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Author</div>
+                    <div class="meta-value">sugiura-hiromiti &lt;sugiura130418@icloud.com&gt;</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Files Changed</div>
+                    <div class="meta-value">1 file</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-label">Changes</div>
+                    <div class="meta-value">+11 -6</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="commit-body">
+            <div class="commit-message">
+                <strong>Description:</strong><br>
+                - Improve formatting and readability of the script<br>
+                - Add timestamped HTML file naming with proper directory structure<br>
+                - Use COMMIT_SUMMARY_PATH environment variable for file location<br>
+                - Add functionality to commit generated HTML files to repository<br>
+                - Better organize the instruction flow for clearer execution<br><br>
+                This provides better organization of commit summaries and automatic tracking of generated documentation.
+            </div>
+            
+            <div class="diff-section">
+                <div class="file-header">📄 user_script/auto_commit.sh</div>
+                <div class="diff-content">@@ -1,5 +1,7 @@
+<span class="diff-remove">-q chat -a --no-interactive "at first, remember that every your prompt started by '> ' should be set to the window title. thus, execute 'title' command by passing your prompt as an argument. 'title' command is my own zsh function. take care that prompt have to be quoted due to 'title' command only accept one argument. \
+-    generate commits of local changes. here is instruction. \</span>
+<span class="diff-add">+q chat -a --no-interactive "at first, remember that every your prompt started by '> ' should be set to the window title. \
++	thus, execute 'title' command by passing your prompt as an argument. \
++	'title' command is my own zsh function. take care that prompt have to be quoted due to 'title' command only accept one argument. \
++	generate commits of local changes. here is instruction. \</span>
+ 	1: go to root directory of current git repository. if current directory is out of git, finish. \
+ 	2: generate commits. each commits should be good commits. that means semantically minimal and easy to understand the purpose. \</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="overview">
+        <h2>📊 Summary Overview</h2>
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number">3</div>
+                <div class="stat-label">Total Commits</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">4</div>
+                <div class="stat-label">Files Modified</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">100</div>
+                <div class="stat-label">Lines Added</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">88</div>
+                <div class="stat-label">Lines Removed</div>
+            </div>
+        </div>
+        
+        <h3>🎯 Key Changes</h3>
+        <ul>
+            <li><strong>Nix Configuration:</strong> Improved flake.nix formatting and added terminal title updates for better user experience</li>
+            <li><strong>Environment Setup:</strong> Added COMMIT_SUMMARY_PATH variable for configurable HTML output location</li>
+            <li><strong>Script Enhancement:</strong> Enhanced auto_commit.sh with better HTML generation and organization</li>
+            <li><strong>User Configuration:</strong> Switched from hiromichi.sugiura to simplified 'a' username</li>
+        </ul>
+        
+        <p><em>All changes have been successfully committed and pushed to the main branch.</em></p>
+    </div>
+
+    <script>
+        // Add click-to-copy functionality for commit hashes
+        document.querySelectorAll('.meta-value').forEach(element => {
+            if (element.textContent.match(/^[a-f0-9]{7}$/)) {
+                element.title = 'Click to copy full hash';
+            }
+        });
+    </script>
+</body>
+</html>

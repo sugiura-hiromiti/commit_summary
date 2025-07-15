@@ -1,0 +1,51 @@
+{
+  "last_updated": "2025-07-15T06:25:31Z",
+  "version": "1.0",
+  "repositories": {
+    "commit_summary": {
+      "display_name": "Commit Summary",
+      "github_url": "https://github.com/sugiura-hiromiti/commit_summary",
+      "total_summaries": 15,
+      "summaries": [
+        {"filename": "commit_summary/commit_summary_2025_07_15_00_13_12.html", "file_size": 19869, "repository": "commit_summary"},
+        {"filename": "commit_summary/commit_summary_2025_07_15_00_43_19.html", "file_size": 24584, "repository": "commit_summary"},
+        {"filename": "commit_summary/commit_summary_2025_07_15_01_08_32.html", "file_size": 24834, "repository": "commit_summary"},
+        {"filename": "commit_summary/commit_summary_2025_07_15_01_24_44.html", "file_size": 23491, "repository": "commit_summary"},
+        {"filename": "commit_summary/commit_summary_2025_07_15_01_39_54.html", "file_size": 21978, "repository": "commit_summary"},
+        {"filename": "commit_summary/commit_summary_2025_07_15_02_52_24.html", "file_size": 17554, "repository": "commit_summary"},
+        {"filename": "commit_summary/commit_summary_2025_07_15_03_10_13.html", "file_size": 21866, "repository": "commit_summary"},
+        {"filename": "commit_summary/commit_summary_2025_07_15_033604.html", "file_size": 20467, "repository": "commit_summary"},
+        {"filename": "commit_summary/commit_summary_2025_07_15_04_47_52.html", "file_size": 21328, "repository": "commit_summary"},
+        {"filename": "commit_summary/commit_summary_2025_07_15_054023.html", "file_size": 20866, "repository": "commit_summary"},
+        {"filename": "commit_summary/commit_summary_2025_07_15_075157.html", "file_size": 19524, "repository": "commit_summary"},
+        {"filename": "commit_summary/commit_summary_2025_07_15_10_43_15.html", "file_size": 22510, "repository": "commit_summary"},
+        {"filename": "commit_summary/commit_summary_2025_07_15_11_28_22.html", "file_size": 19193, "repository": "commit_summary"},
+        {"filename": "commit_summary/commit_summary_2025_07_15_12_16_50.html", "file_size": 22001, "repository": "commit_summary"},
+        {"filename": "commit_summary/commit_summary_2025_07_15_12_54_22.html", "file_size": 18240, "repository": "commit_summary"}
+      ]
+    },
+    "config": {
+      "display_name": "Config",
+      "github_url": "https://github.com/sugiura-hiromiti/.config",
+      "total_summaries": 3,
+      "summaries": [
+        {"filename": "config/config_2025_07_14_21_17_05.html", "file_size": 16178, "repository": "config"},
+        {"filename": "config/config_2025_07_14_21_28_43.html", "file_size": 10569, "repository": "config"},
+        {"filename": "config/config_2025_07_15_00_49_12.html", "file_size": 16050, "repository": "config"}
+      ]
+    },
+    "oso": {
+      "display_name": "OSO",
+      "github_url": "https://github.com/sugiura-hiromiti/oso",
+      "total_summaries": 2,
+      "summaries": [
+        {"filename": "oso/oso_2025_01_14_2025_01_14_23_57_02.html", "file_size": 11612, "repository": "oso"},
+        {"filename": "oso/oso_2025_07_14_2025_07_14_23_22_35.html", "file_size": 11644, "repository": "oso"}
+      ]
+    }
+  },
+  "global_stats": {
+    "total_summaries": 20,
+    "total_repositories": 3
+  }
+}

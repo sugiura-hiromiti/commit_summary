@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commit Summary - commit_summery - 2025-07-15</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            text-align: center;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .status-card {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .status-card.success {
+            border-left-color: #28a745;
+        }
+        
+        .status-card.info {
+            border-left-color: #17a2b8;
+        }
+        
+        .status-label {
+            font-weight: 600;
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        
+        .status-value {
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+        
+        .status-value a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .status-value a:hover {
+            text-decoration: underline;
+        }
+        
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+        
+        .tag.repo {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        
+        .tag.nature {
+            background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%);
+        }
+        
+        .commit-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .commit-header {
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .commit-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .commit-title a {
+            color: #2c3e50;
+            text-decoration: none;
+        }
+        
+        .commit-title a:hover {
+            color: #667eea;
+        }
+        
+        .commit-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .meta-label {
+            font-weight: 600;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .meta-value {
+            font-family: 'Monaco', 'Menlo', monospace;
+            background: #f8f9fa;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            cursor: pointer;
+        }
+        
+        .commit-stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9em;
+        }
+        
+        .stat-item.files {
+            color: #6c757d;
+        }
+        
+        .stat-item.additions {
+            color: #28a745;
+        }
+        
+        .stat-item.deletions {
+            color: #dc3545;
+        }
+        
+        .commit-body {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            white-space: pre-wrap;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        .diff-section {
+            margin-top: 25px;
+        }
+        
+        .diff-file {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .diff-file-header {
+            background: #e9ecef;
+            padding: 12px 15px;
+            font-weight: 600;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9em;
+        }
+        
+        .diff-content {
+            padding: 15px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.85em;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .diff-line {
+            display: block;
+            padding: 2px 0;
+        }
+        
+        .diff-line.addition {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+        }
+        
+        .diff-line.deletion {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+        
+        .diff-line.context {
+            color: #6c757d;
+        }
+        
+        .overview-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .overview-card {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .overview-number {
+            font-size: 2em;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .overview-label {
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .copy-btn {
+            background: none;
+            border: none;
+            color: #667eea;
+            cursor: pointer;
+            font-size: 0.8em;
+            margin-left: 5px;
+        }
+        
+        .copy-btn:hover {
+            color: #5a6fd8;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .commit-meta {
+                grid-template-columns: 1fr;
+            }
+            
+            .commit-stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Commit Summary</h1>
+            
+            <div class="status-grid">
+                <div class="status-card success">
+                    <div class="status-label">Operation Status</div>
+                    <div class="status-value">✅ Success</div>
+                </div>
+                
+                <div class="status-card success">
+                    <div class="status-label">Push Status</div>
+                    <div class="status-value">✅ Pushed to Remote</div>
+                </div>
+                
+                <div class="status-card info">
+                    <div class="status-label">Git Branch</div>
+                    <div class="status-value">🌿 main</div>
+                </div>
+                
+                <div class="status-card info">
+                    <div class="status-label">Remote Repository</div>
+                    <div class="status-value">
+                        <a href="https://github.com/sugiura-hiromiti/commit_summery" target="_blank">
+                            sugiura-hiromiti/commit_summery
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tags-container">
+                <div class="tag repo">📁 commit_summery</div>
+                <div class="tag nature">🤖 Automation</div>
+                <div class="tag nature">📝 Documentation</div>
+                <div class="tag">📅 2025-07-15</div>
+                <div class="tag">🕐 Recent</div>
+            </div>
+        </div>
+
+        <!-- Commit 1: File Relocation -->
+        <div class="commit-section">
+            <div class="commit-header">
+                <div class="commit-title">
+                    <a href="https://github.com/sugiura-hiromiti/commit_summery/commit/69a355cb78e5af05faa1c5523f8e2c1098d17752" target="_blank">
+                        refactor: relocate commit summary HTML to doc directory
+                    </a>
+                </div>
+                
+                <div class="commit-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">Hash:</span>
+                        <span class="meta-value" onclick="copyToClipboard('69a355c')">
+                            69a355c
+                            <button class="copy-btn">📋</button>
+                        </span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Author:</span>
+                        <span class="meta-value">sugiura-hiromiti &lt;sugiura130418@icloud.com&gt;</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Date:</span>
+                        <span class="meta-value">2025-07-15 03:09:02 +0900</span>
+                    </div>
+                </div>
+                
+                <div class="commit-stats">
+                    <div class="stat-item files">📁 1 file changed</div>
+                    <div class="stat-item deletions">➖ 473 deletions</div>
+                </div>
+            </div>
+            
+            <div class="commit-body">- Move commit_summery_2025_07_15_2025-07-15_02-52-24.html from root to doc/
+- Improve file organization by centralizing documentation files
+- Maintain consistent file structure for commit summaries</div>
+            
+            <div class="diff-section">
+                <div class="diff-file">
+                    <div class="diff-file-header">commit_summery_2025_07_15_2025-07-15_02-52-24.html (deleted)</div>
+                    <div class="diff-content">
+                        <span class="diff-line deletion">- File moved from root directory to doc/ directory</span>
+                        <span class="diff-line deletion">- 473 lines removed from root location</span>
+                        <span class="diff-line context">  This is part of file reorganization process</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Commit 2: File Addition -->
+        <div class="commit-section">
+            <div class="commit-header">
+                <div class="commit-title">
+                    <a href="https://github.com/sugiura-hiromiti/commit_summery/commit/6c087a8df9ca3d92bfe5fcc2c753309e5b9314e5" target="_blank">
+                        feat: add commit summary HTML to doc directory
+                    </a>
+                </div>
+                
+                <div class="commit-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">Hash:</span>
+                        <span class="meta-value" onclick="copyToClipboard('6c087a8')">
+                            6c087a8
+                            <button class="copy-btn">📋</button>
+                        </span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Author:</span>
+                        <span class="meta-value">sugiura-hiromiti &lt;sugiura130418@icloud.com&gt;</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Date:</span>
+                        <span class="meta-value">2025-07-15 03:09:11 +0900</span>
+                    </div>
+                </div>
+                
+                <div class="commit-stats">
+                    <div class="stat-item files">📁 1 file changed</div>
+                    <div class="stat-item additions">➕ 473 insertions</div>
+                </div>
+            </div>
+            
+            <div class="commit-body">- Add commit_summery_2025_07_15_2025-07-15_02-52-24.html to doc/ folder
+- Complete file relocation process
+- Ensure commit summary is properly archived in documentation structure</div>
+            
+            <div class="diff-section">
+                <div class="diff-file">
+                    <div class="diff-file-header">doc/commit_summery_2025_07_15_2025-07-15_02-52-24.html (new file)</div>
+                    <div class="diff-content">
+                        <span class="diff-line addition">+ File added to doc/ directory</span>
+                        <span class="diff-line addition">+ 473 lines of HTML commit summary</span>
+                        <span class="diff-line addition">+ Complete documentation structure maintained</span>
+                        <span class="diff-line context">  File relocation completed successfully</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Commit 3: Enhanced Search System -->
+        <div class="commit-section">
+            <div class="commit-header">
+                <div class="commit-title">
+                    <a href="https://github.com/sugiura-hiromiti/commit_summery/commit/8c35241bac14a52def22018a6cf47930d7704ab6" target="_blank">
+                        feat: implement advanced search and tagging system
+                    </a>
+                </div>
+                
+                <div class="commit-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">Hash:</span>
+                        <span class="meta-value" onclick="copyToClipboard('8c35241')">
+                            8c35241
+                            <button class="copy-btn">📋</button>
+                        </span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Author:</span>
+                        <span class="meta-value">sugiura-hiromiti &lt;sugiura130418@icloud.com&gt;</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Date:</span>
+                        <span class="meta-value">2025-07-15 03:09:23 +0900</span>
+                    </div>
+                </div>
+                
+                <div class="commit-stats">
+                    <div class="stat-item files">📁 1 file changed</div>
+                    <div class="stat-item additions">➕ 734 insertions</div>
+                    <div class="stat-item deletions">➖ 9 deletions</div>
+                </div>
+            </div>
+            
+            <div class="commit-body">## Enhanced Search Capabilities
+- Add intelligent search suggestions with repository, date, and tag filtering
+- Implement search operators (repo:, date:, tag:) for precise filtering
+- Add search history and autocomplete functionality
+- Include clear button and enhanced search input UI
+
+## Smart Tagging System
+- Auto-generate contextual tags for each commit summary
+- Categorize tags by type: repository, nature, and time-based
+- Add interactive tag filtering with visual feedback
+- Implement tag-based search and filtering
+
+## Improved User Experience
+- Add active filters display with removal capability
+- Enhance visual design with better spacing and colors
+- Implement responsive tag containers and search interface
+- Add hover effects and smooth transitions
+
+## Technical Improvements
+- Refactor search logic for better performance
+- Add comprehensive tag generation algorithms
+- Implement advanced query parsing for search operators
+- Enhance filtering system with multiple criteria support</div>
+            
+            <div class="diff-section">
+                <div class="diff-file">
+                    <div class="diff-file-header">index.html</div>
+                    <div class="diff-content">
+                        <span class="diff-line addition">+ .search-container {</span>
+                        <span class="diff-line addition">+     display: flex;</span>
+                        <span class="diff-line addition">+     flex-direction: column;</span>
+                        <span class="diff-line addition">+     gap: 15px;</span>
+                        <span class="diff-line addition">+ }</span>
+                        <span class="diff-line context">  </span>
+                        <span class="diff-line addition">+ .search-input-group {</span>
+                        <span class="diff-line addition">+     position: relative;</span>
+                        <span class="diff-line addition">+     display: flex;</span>
+                        <span class="diff-line addition">+     align-items: center;</span>
+                        <span class="diff-line addition">+ }</span>
+                        <span class="diff-line context">  </span>
+                        <span class="diff-line context">  .search-box {</span>
+                        <span class="diff-line context">      width: 100%;</span>
+                        <span class="diff-line deletion">-     padding: 15px 20px;</span>
+                        <span class="diff-line addition">+     padding: 15px 50px 15px 20px;</span>
+                        <span class="diff-line context">      font-size: 1.1rem;</span>
+                        <span class="diff-line context">  ...</span>
+                        <span class="diff-line addition">+ // Enhanced search functionality with suggestions</span>
+                        <span class="diff-line addition">+ // Smart tagging system implementation</span>
+                        <span class="diff-line addition">+ // Advanced filtering and query parsing</span>
+                        <span class="diff-line addition">+ // Interactive UI improvements</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overview Section -->
+        <div class="overview-section">
+            <h2 style="text-align: center; margin-bottom: 30px; color: #2c3e50;">📊 Commit Overview</h2>
+            
+            <div class="overview-grid">
+                <div class="overview-card">
+                    <div class="overview-number">3</div>
+                    <div class="overview-label">Total Commits</div>
+                </div>
+                
+                <div class="overview-card">
+                    <div class="overview-number">2</div>
+                    <div class="overview-label">Files Modified</div>
+                </div>
+                
+                <div class="overview-card">
+                    <div class="overview-number">1,207</div>
+                    <div class="overview-label">Lines Added</div>
+                </div>
+                
+                <div class="overview-card">
+                    <div class="overview-number">482</div>
+                    <div class="overview-label">Lines Removed</div>
+                </div>
+                
+                <div class="overview-card">
+                    <div class="overview-number">1</div>
+                    <div class="overview-label">Refactoring</div>
+                </div>
+                
+                <div class="overview-card">
+                    <div class="overview-number">2</div>
+                    <div class="overview-label">New Features</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                // Show a temporary success message
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✅';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 1000);
+            });
+        }
+        
+        // Add smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>

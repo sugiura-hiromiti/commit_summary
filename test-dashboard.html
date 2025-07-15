@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Test</title>
+    <style>
+        body { font-family: system-ui; padding: 20px; background: #f5f5f5; }
+        .test-result { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .pass { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .fail { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Dashboard Test Results</h1>
+    <div id="testResults"></div>
+    
+    <script>
+        async function runTests() {
+            const results = document.getElementById('testResults');
+            
+            function addResult(test, status, message) {
+                const div = document.createElement('div');
+                div.className = `test-result ${status}`;
+                div.innerHTML = `<strong>${test}:</strong> ${message}`;
+                results.appendChild(div);
+            }
+            
+            // Test 1: Manifest loading
+            try {
+                const response = await fetch('docs/data/manifest.json');
+                if (response.ok) {
+                    const manifest = await response.json();
+                    addResult('Manifest Loading', 'pass', `✅ Successfully loaded manifest with ${manifest.global_stats.total_summaries} summaries`);
+                    
+                    // Test 2: Repository data structure
+                    const repoCount = Object.keys(manifest.repositories).length;
+                    if (repoCount === 3) {
+                        addResult('Repository Structure', 'pass', `✅ Found ${repoCount} repositories as expected`);
+                    } else {
+                        addResult('Repository Structure', 'fail', `❌ Expected 3 repositories, found ${repoCount}`);
+                    }
+                    
+                    // Test 3: Sample file accessibility
+                    const sampleFile = manifest.repositories.commit_summary.summaries[0];
+                    const fileResponse = await fetch(`docs/summaries/${sampleFile.filename}`);
+                    if (fileResponse.ok) {
+                        addResult('File Accessibility', 'pass', `✅ Sample file ${sampleFile.filename} is accessible`);
+                    } else {
+                        addResult('File Accessibility', 'fail', `❌ Cannot access sample file ${sampleFile.filename}`);
+                    }
+                    
+                } else {
+                    addResult('Manifest Loading', 'fail', `❌ Failed to load manifest: ${response.status}`);
+                }
+            } catch (error) {
+                addResult('Manifest Loading', 'fail', `❌ Error loading manifest: ${error.message}`);
+            }
+            
+            // Test 4: CSS loading
+            try {
+                const cssResponse = await fetch('docs/assets/css/main.css');
+                if (cssResponse.ok) {
+                    addResult('CSS Loading', 'pass', '✅ CSS file loads successfully');
+                } else {
+                    addResult('CSS Loading', 'fail', `❌ CSS file failed to load: ${cssResponse.status}`);
+                }
+            } catch (error) {
+                addResult('CSS Loading', 'fail', `❌ Error loading CSS: ${error.message}`);
+            }
+            
+            // Test 5: JavaScript loading
+            try {
+                const jsResponse = await fetch('docs/assets/js/dashboard.js');
+                if (jsResponse.ok) {
+                    addResult('JavaScript Loading', 'pass', '✅ JavaScript file loads successfully');
+                } else {
+                    addResult('JavaScript Loading', 'fail', `❌ JavaScript file failed to load: ${jsResponse.status}`);
+                }
+            } catch (error) {
+                addResult('JavaScript Loading', 'fail', `❌ Error loading JavaScript: ${error.message}`);
+            }
+            
+            // Test 6: Dashboard class availability
+            setTimeout(() => {
+                if (typeof CommitSummaryDashboard !== 'undefined') {
+                    addResult('Dashboard Class', 'pass', '✅ CommitSummaryDashboard class is available');
+                } else {
+                    addResult('Dashboard Class', 'fail', '❌ CommitSummaryDashboard class not found');
+                }
+            }, 1000);
+            
+            addResult('Test Summary', 'info', '📋 All basic tests completed. Check individual results above.');
+        }
+        
+        // Run tests when page loads
+        document.addEventListener('DOMContentLoaded', runTests);
+    </script>
+</body>
+</html>
