@@ -5760,6 +5760,7 @@
                     return { success: true, message: 'Validation error handled correctly' };
                 }
             }
+        }
 
         // ===== TESTING INFRASTRUCTURE =====
         class TestRunner {
@@ -6292,7 +6293,6 @@ Duration: ${results.duration.toFixed(2)}ms
 
                 return report;
             }
-        }
 
             filterAndRenderSummaries() {
                 // Apply filters and sorting
@@ -7838,6 +7838,9 @@ Duration: ${results.duration.toFixed(2)}ms
                 }
             }
         }
+
+        // ===== ALTERNATIVE DASHBOARD IMPLEMENTATION =====
+        class CommitSummaryDashboardAlt {
             constructor() {
                 this.summaries = [];
                 this.filteredSummaries = [];
